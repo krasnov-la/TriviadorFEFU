@@ -11,5 +11,5 @@ public class User
     public bool Admin {get; set;} = false;
     [MaxLength(256)]
     public string? School {get; set;} = null;
-    public int Rating {get; set;}
+    public int Rating {get; set;} = 0;
 }
