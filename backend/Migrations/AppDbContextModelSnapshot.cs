@@ -22,7 +22,7 @@ namespace backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AnswerOption", b =>
+            modelBuilder.Entity("DataAccess.Models.AnswerOption", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -43,6 +43,21 @@ namespace backend.Migrations
                     b.HasIndex("QuestionId");
 
                     b.ToTable("Answers");
+                });
+
+            modelBuilder.Entity("DataAccess.Models.Question", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Questions");
                 });
 
             modelBuilder.Entity("DataAccess.Models.User", b =>
@@ -75,24 +90,9 @@ namespace backend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Question", b =>
+            modelBuilder.Entity("DataAccess.Models.AnswerOption", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Questions");
-                });
-
-            modelBuilder.Entity("AnswerOption", b =>
-                {
-                    b.HasOne("Question", "Question")
+                    b.HasOne("DataAccess.Models.Question", "Question")
                         .WithMany("Options")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -101,7 +101,7 @@ namespace backend.Migrations
                     b.Navigation("Question");
                 });
 
-            modelBuilder.Entity("Question", b =>
+            modelBuilder.Entity("DataAccess.Models.Question", b =>
                 {
                     b.Navigation("Options");
                 });
