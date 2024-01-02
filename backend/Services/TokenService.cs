@@ -15,7 +15,7 @@ public class TokenService : ITokenService
     {
         string? jwtKey = configuration.GetSection("JwtKey").Value;
         if (jwtKey is null) throw new FileLoadException("File containing keys is not valid");
-
+        _jwtKey = jwtKey;
     }
 
     public string GenerateAccessToken(IEnumerable<Claim> claims)
