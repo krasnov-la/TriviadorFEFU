@@ -479,5 +479,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# Db
-dbconfig.json
+# Secret keys 
+secret.json
