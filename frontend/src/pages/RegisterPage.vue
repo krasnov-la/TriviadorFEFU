@@ -97,6 +97,7 @@ function exit() {
 
 <template>
   <q-page class='column justify-center items-center'>
+    <div style="font-size: 40px;" class="q-pb-lg">TriviadorFEFU</div>
     <q-card
       class='q-px-lg q-pt-lg full-width column justify-center items-center'
       style='max-width: 25%'
