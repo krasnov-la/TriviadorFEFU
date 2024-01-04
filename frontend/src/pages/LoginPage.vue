@@ -29,11 +29,11 @@ function exit() {
 
 <template>
   <q-page class='column justify-center items-center'>
+    <div style="font-size: 40px;" class="q-pb-lg">TriviadorFEFU</div>
     <q-card
-      class='q-px-lg q-pt-lg full-width column justify-center items-center'
+      class='q-px-lg q-pt-lg q-mb-lg full-width column justify-center items-center'
       style='max-width: 25%'
     >
-      <q-img src='logo.png' alt='Logo' />
       <q-form class='fit column'>
         <q-card-section class='q-pb-none'>
           <q-input
@@ -80,12 +80,20 @@ function exit() {
               />
             </q-banner>
           </div>
-          <div class='row full-width justify-between q-pt-md q-px-md'>
-            <q-btn class='col-4' color='primary' label='Log in' type='submit' />
-            <q-btn @click='exit' class='col-4' color='primary' label='Exit' />
+          <div class='row full-width justify-around q-pb-md'>
+            <q-btn class='col-12' color='primary' label='Log in' type='submit' />
           </div>
         </q-card-section>
       </q-form>
+    </q-card>
+    <q-card
+      class='q-px-lg q-pb-lg q-pt-md full-width column justify-center items-center'
+      style='max-width: 25%'
+    >
+      <div class='row full-width justify-around q-pb-md'>
+        <div class="q-pb-sm">Have not registered yet?</div>
+        <q-btn class='col-11' color='primary' label='Register' type='submit' />
+      </div>
     </q-card>
   </q-page>
 </template>
