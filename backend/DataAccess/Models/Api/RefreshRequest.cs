@@ -1,3 +1,4 @@
+namespace DataAccess.Models;
 public class RefreshRequest
 {
     public required string AccessToken {get; set;}
