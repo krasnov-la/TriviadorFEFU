@@ -6,8 +6,8 @@ using System.Collections.Generic;
 
 namespace Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("[controller]")]
     public class AnswerOptionController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -17,16 +17,14 @@ namespace Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // GET: api/AnswerOptions
         [HttpGet]
-        public ActionResult<IEnumerable<AnswerOption>> GetAnswerOptions()
+        public ActionResult<IEnumerable<AnswerOption>> Get()
         {
             return _unitOfWork.AnswerRepo.All().ToList();
         }
 
-        // GET: api/AnswerOptions/5
         [HttpGet("{id}")]
-        public ActionResult<AnswerOption> GetAnswerOption(Guid id)
+        public ActionResult<AnswerOption> Get(Guid id)
         {
             var answerOption = _unitOfWork.AnswerRepo.First(x => x.Id == id);
 
@@ -35,37 +33,53 @@ namespace Controllers
                 return NotFound();
             }
 
-            return answerOption;
+            return Ok(answerOption);
         }
 
-        // POST: api/AnswerOptions
         [HttpPost]
-        public ActionResult<AnswerOption> PostAnswerOption(AnswerOption answerOption)
+        public ActionResult<AnswerOption> Post([FromBody] AnswerOptionRequest request)
         {
-            _unitOfWork.AnswerRepo.Add(answerOption);
-            _unitOfWork.Save();
+            // Валидация и обработка запроса
+            if (ModelState.IsValid)
+            {
+                var answerOption = new AnswerOption
+                {
+                    Text = request.Text,
+                    // Маппинг остальных свойств
+                };
 
-            return CreatedAtAction("GetAnswerOption", new { id = answerOption.Id }, answerOption);
+                _unitOfWork.AnswerRepo.Add(answerOption);
+                _unitOfWork.Save();
+
+                return Ok(answerOption);
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
         }
 
-        // PUT: api/AnswerOptions/5
         [HttpPut("{id}")]
-        public IActionResult PutAnswerOption(Guid id, AnswerOption answerOption)
+        public IActionResult Put(Guid id, [FromBody] AnswerOptionRequest request)
         {
-            if (id != answerOption.Id)
+            var existingAnswerOption = _unitOfWork.AnswerRepo.First(x => x.Id == id);
+
+            if (existingAnswerOption == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _unitOfWork.AnswerRepo.Update(answerOption);
+            // Обновление свойств существующего объекта
+            existingAnswerOption.Text = request.Text;
+
+            _unitOfWork.AnswerRepo.Update(existingAnswerOption);
             _unitOfWork.Save();
 
             return NoContent();
         }
 
-        // DELETE: api/AnswerOptions/5
         [HttpDelete("{id}")]
-        public IActionResult DeleteAnswerOption(Guid id)
+        public IActionResult Delete(Guid id)
         {
             var answerOption = _unitOfWork.AnswerRepo.First(x => x.Id == id);
             if (answerOption == null)
@@ -79,4 +93,12 @@ namespace Controllers
             return NoContent();
         }
     }
+
+    public class AnswerOptionRequest
+    {
+        public required string Text {get; set;}
+        public bool Correct {get; set;}
+
+    }
+    
 }

@@ -6,8 +6,8 @@ using System.Collections.Generic;
 
 namespace Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("[controller]")]
     public class QuestionController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -18,13 +18,13 @@ namespace Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Question>> GetQuestions()
+        public ActionResult<IEnumerable<Question>> Get()
         {
             return _unitOfWork.QuestionRepo.All().ToList();
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Question> GetQuestion(Guid id)
+        public ActionResult<Question> Get(Guid id)
         {
             var question = _unitOfWork.QuestionRepo.First(x => x.Id == id);
 
@@ -33,34 +33,50 @@ namespace Controllers
                 return NotFound();
             }
 
-            return question;
+            return Ok(question);
         }
 
         [HttpPost]
-        public ActionResult<Question> PostQuestion(Question question)
+        public ActionResult<Question> Post([FromBody] QuestionRequest request)
         {
-            _unitOfWork.QuestionRepo.Add(question);
-            _unitOfWork.Save();
+            if (ModelState.IsValid)
+            {
+                var question = new Question
+                {
+                    Text = request.Text,
+                };
 
-            return CreatedAtAction("GetQuestion", new { id = question.Id }, question);
+                _unitOfWork.QuestionRepo.Add(question);
+                _unitOfWork.Save();
+
+                return Ok(question);
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
         }
 
         [HttpPut("{id}")]
-        public IActionResult PutQuestion(Guid id, Question question)
+        public IActionResult Put(Guid id, [FromBody] QuestionRequest request)
         {
-            if (id != question.Id)
+            var existingQuestion = _unitOfWork.QuestionRepo.First(x => x.Id == id);
+
+            if (existingQuestion == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _unitOfWork.QuestionRepo.Update(question);
+            existingQuestion.Text = request.Text;
+
+            _unitOfWork.QuestionRepo.Update(existingQuestion);
             _unitOfWork.Save();
 
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteQuestion(Guid id)
+        public IActionResult Delete(Guid id)
         {
             var question = _unitOfWork.QuestionRepo.First(x => x.Id == id);
             if (question == null)
@@ -73,5 +89,10 @@ namespace Controllers
 
             return NoContent();
         }
+    }
+
+    public class QuestionRequest
+    {
+        public required string Text {get; set;}
     }
 }
