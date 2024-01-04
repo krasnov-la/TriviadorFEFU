@@ -8,23 +8,23 @@ import { authGet } from 'src/utils';
 
 import { Router } from 'src/router';
 
-authGet('/Auth/GetMyself')
-  .then(response => {
-    const role = response.data.data.user.roleName;
-    if (role === 'Administrator')
-      Router.replace({ path: '/admin' });
-    if (role === 'User')
-      Router.replace({ path: '/user' });
-  });
-
 const login = ref('');
+const displayName = ref('');
 const password = ref('');
+const passwordRepeat = ref('');
+
+
 
 const isPwd = ref(true);
+const school = ref('');
 
 const error = ref('');
 
 const $q = useQuasar();
+
+const stringOptions = [
+  'ИМКТ', 'ВИ-ШРМИ', 'Политех', 'Мед', 'ШМИ'
+]
 
 const usernameRules = [
   (val?: string) => (val && val.length > 0) || 'Please enter username'
@@ -37,28 +37,21 @@ const submitForm = () => {
   error.value = '';
 
   const formData = {
-    email: login.value,
-    password: password.value
+    login: login.value,
+    password: password.value,
+    displayName: displayName.value,
+    school: school.value,
   };
 
   if (login.value === '' || password.value === '') {
     return;
   }
 
-  api.post('/Auth/Login', formData)
+  api.post('/Auth/Reg', formData) //TODO: complete with api
     .then(response => {
 
       const msg = response.data.msg;
 
-      if (msg === 'UserNotFound' || msg === 'InvalidPwd') {
-        error.value = 'Wrong username or password';
-        return;
-      }
-
-      if (msg === 'UnactiveUser') {
-        error.value = 'User unactive';
-        return;
-      }
 
       const accessToken = response.data.data.accessToken;
       const refreshToken = response.data.data.refreshToken;
@@ -96,21 +89,21 @@ const closeBanner = () => {
   return;
 };
 
-function reg() {
-  Router.push('/reg');
+function exit() {
+  Router.push('/');
   return;
 }
-
 </script>
+
 <template>
   <q-page class='column justify-center items-center'>
     <q-card
       class='q-px-lg q-pt-lg full-width column justify-center items-center'
       style='max-width: 25%'
     >
-<!--      <q-img src='' alt='Logo' /> TODO: logo-->
       <q-form class='fit column' @submit='submitForm'>
         <q-card-section class='q-pb-none'>
+
           <q-input
             label='Login'
             v-model='login'
@@ -119,6 +112,25 @@ function reg() {
             lazy-rules
             :rules='usernameRules'
           />
+          <q-input
+            label='Display Name'
+            v-model='displayName'
+            outlined
+            dense
+            lazy-rules
+            :rules='usernameRules'
+          />
+          <div class="q-gutter-md row q-mb-md">
+            <q-select
+              :dense="true"
+              outlined
+              v-model="school"
+              label="School"
+              :options="stringOptions"
+              style="width: 300px"
+              behavior="dialog"
+            />
+          </div>
           <q-input
             v-model='password'
             dense
@@ -136,7 +148,24 @@ function reg() {
               />
             </template>
           </q-input>
+           <q-input
+            dense
+            outlined
+            :rules='passwordRules'
+            v-model="passwordRepeat"
+            :type="isPwd ? 'password' : 'text'"
+            label="Repeat password"
+           >
+             <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class='cursor-pointer'
+                @click='isPwd = !isPwd'
+              />
+            </template>
+           </q-input>
         </q-card-section>
+
         <q-card-section class='q-py-none'>
           <div>
             <q-banner
@@ -157,8 +186,8 @@ function reg() {
             </q-banner>
           </div>
           <div class='row full-width justify-between q-pt-md q-px-md'>
-            <q-btn class='col-4' color='primary' label='Log in' type='submit' />
-            <q-btn @click='reg' class='col-4' color='primary' label='Register' />
+            <q-btn class='col-4' color='primary' label='Reg in' type='submit' />
+            <q-btn @click='exit' class='col-4' color='primary' label='Back' />
           </div>
         </q-card-section>
       </q-form>
