@@ -55,6 +55,32 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    var questions = context.Questions.ToList();
+    var answerOptions = context.Answers.ToList();
+
+    // Вывести данные в консоль или логгер
+    Console.WriteLine("Questions:");
+    foreach (var question in questions)
+    {
+        Console.WriteLine($"Question Id: {question.Id}, Text: {question.Text}");
+        foreach (var option in question.Options)
+        {
+            Console.WriteLine($"  Option Id: {option.Id}, Text: {option.Text}, Correct: {option.Correct}");
+        }
+    }
+
+    Console.WriteLine("AnswerOptions:");
+    foreach (var option in answerOptions)
+    {
+        Console.WriteLine($"Option Id: {option.Id}, Text: {option.Text}, Correct: {option.Correct}, QuestionId: {option.QuestionId}");
+    }
+}
+
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
