@@ -6,6 +6,7 @@ using Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Auth;
 
 namespace Controllers;
 
@@ -29,7 +30,8 @@ public class AuthController : ControllerBase
 
         IEnumerable<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Name, request.Login)
+                new Claim(ClaimTypes.Name, request.Login),
+                new Claim(ClaimTypes.Role, Roles.Default)
             };
 
         var accessToken = _tokenService.GenerateAccessToken(claims);
@@ -66,7 +68,8 @@ public class AuthController : ControllerBase
 
         IEnumerable<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Name, user.Login)
+                new Claim(ClaimTypes.Name, user.Login),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
         var accessToken = _tokenService.GenerateAccessToken(claims);
@@ -114,7 +117,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    [Authorize]
+    [AuthFilter("default")]
     [HttpPost("Revoke")]
     public IActionResult Revoke()
     {
