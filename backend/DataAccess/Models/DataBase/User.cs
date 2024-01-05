@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Auth;
 
 namespace DataAccess.Models;
 
@@ -10,7 +11,7 @@ public class User
     [MaxLength(256)]
     public required string DisplayName {get; set;}
     public required string Password {get; set;}
-    public bool Admin {get; set;} = false;
+    public string Role {get; set;} = Roles.Default;
     [MaxLength(256)]
     public string? School {get; set;} = null;
     public int Rating {get; set;} = 0;
