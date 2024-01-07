@@ -1,40 +1,3 @@
-<template>
-  <q-dialog 
-    :model-value='active'
-    ref='dialogRef'
-    @hide='onDialogHide'
-  >
-    <q-card 
-      class='column full-width' 
-      style='min-width: 50%;'
-    >
-      <q-card-section class='row text-h4 justify-center'>
-        <span>Save?</span>
-      </q-card-section>
-      <q-card-section class='row justify-around'>
-        <q-btn 
-          label='Back to profile' 
-          class='col-3' 
-          color='primary' 
-          @click='back'
-        />
-        <q-btn 
-          label='Save' 
-          class='col-3' 
-          color='primary' 
-          @click='save'
-        />
-        <q-btn 
-          label='Forget changes' 
-          class='col-3' 
-          color='primary' 
-          @click='forget'
-        />
-      </q-card-section>
-    </q-card>
-  </q-dialog>
-</template>
-
 <script setup lang='ts'>
   import { ref } from 'vue';
   import { QDialog } from 'quasar';
@@ -77,3 +40,40 @@
   };
 
 </script>
+
+<template>
+  <q-dialog 
+    :model-value='active'
+    ref='dialogRef'
+    @hide='onDialogHide'
+  >
+    <q-card 
+      class='column full-width' 
+      style='min-width: 50%;'
+    >
+      <q-card-section class='row text-h4 justify-center'>
+        <span>Save?</span>
+      </q-card-section>
+      <q-card-section class='row justify-around'>
+        <q-btn 
+          label='Back to profile' 
+          class='col-3' 
+          color='primary' 
+          @click='back'
+        />
+        <q-btn 
+          label='Save' 
+          class='col-3' 
+          color='primary' 
+          @click='save'
+        />
+        <q-btn 
+          label='Forget changes' 
+          class='col-3' 
+          color='primary' 
+          @click='forget'
+        />
+      </q-card-section>
+    </q-card>
+  </q-dialog>
+</template>
