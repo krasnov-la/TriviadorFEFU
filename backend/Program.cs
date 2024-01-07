@@ -15,6 +15,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "_myAllowSpecificOrigins", policy => { policy.WithOrigins("*"); policy.WithHeaders("*"); });
 });
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -44,6 +45,8 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -61,5 +64,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<GameHub>("/Game");
 
 app.Run();
