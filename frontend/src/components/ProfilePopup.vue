@@ -1,6 +1,5 @@
 <script setup lang='ts'>
   import { ref } from "vue";
-  import ConfirmProfilePopup from 'components/ConfirmProfilePopup.vue';
   import { QDialog } from 'quasar';
 
   const props = defineProps<{
@@ -17,38 +16,23 @@
   const selectedSchool = ref(null);
   const availableSchools = ["IMKT", "IP"];
 
-  const activeConfirm = ref(false);
-
   const dialogRef = ref<QDialog>();
 
-  const hide = () => {
-    if(dialogRef.value !== undefined) dialogRef.value.hide();
-  }
-
-  const backToProfile = () => {
-    console.log("backToProfile");
-    activeConfirm.value = false;
+  const closeProfileDialog = () => {
+    if(dialogRef.value !== undefined) dialogRef.value?.hide();
+    emit("close");
   };
 
   const saveProfile = () => {
     console.log("saveProfile");
-    activeConfirm.value = false;
-    emit("close");
-    hide();
+    closeProfileDialog();
   };
-
-  const forgetProfileChanges = () => {
-    console.log("forgetProfileChanges");
-    activeConfirm.value = false;
-    emit("close");
-    hide();
-  }
 </script>
 
 <template>
   <q-dialog 
     :model-value='active'
-    @hide='() => { activeConfirm = true; }'
+    persistent
     ref="dialogRef"
   >
     <q-card 
@@ -87,19 +71,9 @@
         <q-btn 
           label="Save and quit" 
           color="primary col-12"
-          @click="activeConfirm = true"
+          @click="saveProfile"
         />
       </q-card-section>
     </q-card>
-    <ConfirmProfilePopup
-      v-model:active="activeConfirm"
-      @back="backToProfile"
-      @save="saveProfile"
-      @forget="forgetProfileChanges"
-    />
   </q-dialog>
 </template>
-
-<style scoped lang='sass'>
-
-</style>
