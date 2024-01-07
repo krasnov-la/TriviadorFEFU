@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {ref, reactive, computed} from 'vue';
 import { QTableProps } from 'quasar';
+import ProfilePopup from "src/components/ProfilePopup.vue";
 
 const state = reactive({
   rows: [
@@ -55,69 +56,192 @@ const sortedRows = computed(() => {
   return state.rows.slice().sort((
     (b, a) => parseFloat(a.score) - parseFloat(b.score)));
 })
+
+const profileActive = ref(false);
+const hostRegimeActive = ref(false);
+const inputIdActive = ref(false);
+const joiningToGameLoadBarActive = ref(false);
+
+const gameIdToConnect = ref<number | null>(null);
+
+const showProfile = () => {
+  profileActive.value = true;
+};
+
+const closeProfile = () => {
+  profileActive.value = false;
+};
+
+const createGame = () => {
+  hostRegimeActive.value = true;
+}
+
+const endGame = () => {
+  hostRegimeActive.value = false;
+}
 </script>
 
 <template>
   <q-page class='row justify-around items-center'>
-<!--    table-->
+    <!--Table-->
     <div style="height: 600px; width: 600px">
-      <q-table style="width: 600px; height: 600px;  border-radius: 5%"
-               separator="horizontal"
-               :columns="tColumns.columns"
-               :rows="sortedRows"
-               row-key="name"
-               class="no-shadow row"
-               :rows-per-page-options="[10]"
-               bordered
+      <q-table 
+        style="width: 600px; height: 600px;  border-radius: 5%"
+        separator="horizontal"
+        :columns="tColumns.columns"
+        :rows="sortedRows"
+        row-key="name"
+        class="no-shadow row"
+        :rows-per-page-options="[10]"
+        bordered
       />
     </div>
-
-<!--Lobby-->
-    <div class="column justify-center"
-         style="height: 600px;
-         width: 600px; border-radius: 5%; background-color: white">
-      <div class="q-my-xs row justify-around" style="font-size: 20px">
+    <!--Lobby-->
+    <div
+      class="column justify-center"
+      style="height: 600px;
+      width: 600px; border-radius: 5%; background-color: white"
+    >
+      <div 
+        class="q-my-xs row justify-around" 
+        style="font-size: 20px"
+        :class="{ invisible: !hostRegimeActive }"
+      >
         Players: {{state.groupList.length + 1}}/4
       </div>
-
-<!--      Player profile-->
-      <div class="col-3 q-ml-xs q-mr-xs">
+      <!--Player profile-->
+      <div 
+        class="col-3 q-ml-xs q-mr-xs"
+        @click="showProfile"
+      >
         <div class="row" style="border:1px solid #7c7c7c; border-radius: 15px">
           <div class="col-3">
-            <q-img style="width: 100px; border-radius: 100px; height: 100px" src="cat.jpg"/>
+            <q-img 
+              style="width: 100px; 
+              border-radius: 100px; 
+              height: 100px" 
+              src="cat.jpg"
+            />
           </div>
-          <a class="column justify-center" href="#"
-             style="font-size: 25px; text-decoration: none; color: black">
+          <span 
+            class="column justify-center" 
+            style="font-size: 25px; text-decoration: none; color: black"
+          >
             Profile
-          </a>
+          </span>
         </div>
       </div>
-
-<!--      Lobby members-->
-      <div class="col q-ml-xs q-mr-xs">
+      <!--Lobby members-->
+      <div 
+        class="col q-ml-xs q-mr-xs"
+        :class="{ invisible: !hostRegimeActive }"
+      >
         <div class="row q-py-xs q-mb-md" style="border:1px solid #7c7c7c; border-radius: 15px"
-             v-for="member in state.groupList" :key="member">
+          v-for="member in state.groupList" :key="member"
+        >
           <div class="col-2 q-ml-xs">
             <q-img style="width: 50px; border-radius: 100px; height: 50px" src="cat.jpg"/>
           </div>
-            <div class="column justify-center" href="#" style="font-size: 20px;">
-              {{member.displayName}}
-            </div>
-<!--            <q-btn class="column justify-center q-ml-xl" size="10px" icon="delete"/>-->
+          <div class="column justify-center" href="#" style="font-size: 20px;">
+            {{member.displayName}}
+          </div>
+        <!--<q-btn class="column justify-center q-ml-xl" size="10px" icon="delete"/>-->
         </div>
       </div>
-
-      <div class="column col-4 justify-evenly">
-        <div class="row justify-center q-mb-lg"
+      <div 
+        class="row col-4 justify-evenly"
+        :class="{ hidden: hostRegimeActive }"
+      >
+        <q-btn 
+          class="col-4" 
+          style="max-height: 150px;" 
+          size="25px" 
+          color="primary"
+          @click="createGame"          
         >
-            <q-btn style="width: 300px" size="25px" :disabled="state.groupList.length === 3">Invite</q-btn>
+          Create game
+        </q-btn>
+        <q-btn 
+          class="col-4" 
+          style="max-height: 150px;" 
+          size="25px"
+          color="primary"
+          @click="() => { inputIdActive = true; }"
+        >
+          Join game
+        </q-btn>
+      </div>
+      <div 
+        class="column col-4 justify-evenly"
+        :class="{ hidden: !hostRegimeActive }"
+      >
+        <div class="row row-4 justify-center">
+          <q-input 
+            class="column col-5 q-pr-sm" 
+            v-model="gameIdToConnect"
+            readonly
+            label="Game ID"
+            stack-label
+          />
+          <q-btn 
+            class="column col-5 q-pl-sm" 
+            color="primary"
+            @click="endGame"
+          >
+            Leave room
+          </q-btn>
         </div>
-        <div class="row justify-center">
-            <q-btn style="width: 370px" size="27px">Find game</q-btn>
+        <div class="row row-8 justify-center">
+          <q-btn 
+            fit
+            class="column col-10"
+            color="primary"
+          >
+            Start game
+          </q-btn>
         </div>
       </div>
     </div>
   </q-page>
+  <ProfilePopup
+    v-model:active="profileActive"
+    @close="closeProfile"
+  />
+  <q-dialog
+    :model-value="inputIdActive"
+    @hide="() => { inputIdActive = false; }"
+  >
+    <q-card class="q-px-sm q-py-sm">
+      <div class="row">
+        <q-input
+          class="q-pr-sm"
+          v-model="gameIdToConnect"
+          label="Game ID" 
+        />
+        <q-btn
+          label="Join"
+          color="primary"
+          @click="() => { joiningToGameLoadBarActive = true; }"
+        />
+      </div>
+    </q-card>
+  </q-dialog>
+  <q-dialog
+    :model-value="joiningToGameLoadBarActive"
+    persistent
+  >
+    <q-card
+      style="height: 80px; width: 80px;"
+      class="row items-center justify-center"
+    >
+      <q-circular-progress
+        indeterminate
+        rounded
+        style="height: 50px; width: 50px;"
+        color="primary"
+      />
+    </q-card>
+  </q-dialog>
 </template>
 <style lang="sass">
 body

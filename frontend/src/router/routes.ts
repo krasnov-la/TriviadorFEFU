@@ -5,8 +5,11 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/UnloggedLayout.vue'),
     children: [
-      {
+      { 
         path: '', component: () => import('pages/LoginPage.vue')
+      },
+      { 
+        path: 'testdialog', component: () => import('pages/ForDialogTesting.vue')
       },
       {
         path: 'reg',   component: () => import('pages/RegisterPage.vue')
