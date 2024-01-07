@@ -25,12 +25,13 @@ namespace Controllers
                 .All()
                 .Where(u => !string.IsNullOrEmpty(u.School))
                 .GroupBy(u => u.School)
-                .Select(g => new { School = g.Key, TotalStudents = g.Count() })
-                .OrderByDescending(r => r.TotalStudents)
+                .Select(g => new { School = g.Key, TotalRating = g.Sum(u => u.Rating) })
+                .OrderByDescending(r => r.TotalRating)
                 .ToList();
 
             return Ok(schoolRatings);
         }
+
 
         // Получить N лучших учеников по школе
         [HttpGet("top-students-by-school")]
