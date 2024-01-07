@@ -6,6 +6,9 @@
 # Manually added ignore for .vscode
 .vscode
 
+#pycharm
+.idea
+
 # User-specific files
 *.rsuser
 *.suo
