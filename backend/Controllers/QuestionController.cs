@@ -91,8 +91,4 @@ namespace Controllers
         }
     }
 
-    public class QuestionRequest
-    {
-        public required string Text {get; set;}
-    }
 }
