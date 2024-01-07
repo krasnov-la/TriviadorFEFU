@@ -10,7 +10,13 @@ const routes: RouteRecordRaw[] = [
       },
       { 
         path: 'testdialog', component: () => import('pages/ForDialogTesting.vue')
-      }
+      },
+      {
+        path: 'reg',   component: () => import('pages/RegisterPage.vue')
+      },
+      {
+        path: 'lobby',   component: () => import('pages/MainLobby.vue')
+      },
     ],
   },
 

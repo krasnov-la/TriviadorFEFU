@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
+import { Router } from "src/router";
 
 const email = ref('');
 const password = ref('');
@@ -23,6 +24,11 @@ const closeBanner = () => {
 
 function exit() {
   window.close();
+  return;
+}
+
+function toReg() {
+  Router.push('/reg');
   return;
 }
 </script>
@@ -92,7 +98,7 @@ function exit() {
     >
       <div class='row full-width justify-around q-pb-md'>
         <div class="q-pb-sm">Have not registered yet?</div>
-        <q-btn class='col-11' color='primary' label='Register' type='submit' />
+        <q-btn @click='toReg' class='col-11' color='primary' label='Register'/>
       </div>
     </q-card>
   </q-page>
