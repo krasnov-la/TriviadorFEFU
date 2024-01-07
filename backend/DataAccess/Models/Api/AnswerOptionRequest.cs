@@ -1,5 +1,5 @@
 namespace DataAccess.Models;
-ublic class AnswerOptionRequest
+public class AnswerOptionRequest
 {
     public Guid QuestionId { get; set; }
     public required string Text { get; set; }
