@@ -39,13 +39,13 @@ namespace Controllers
         [HttpPost]
         public ActionResult<AnswerOption> Post([FromBody] AnswerOptionRequest request)
         {
-            // Валидация и обработка запроса
             if (ModelState.IsValid)
             {
                 var answerOption = new AnswerOption
                 {
                     Text = request.Text,
-                    // Маппинг остальных свойств
+                    QuestionId = request.QuestionId,
+                    Correct = request.Correct,
                 };
 
                 _unitOfWork.AnswerRepo.Add(answerOption);
@@ -69,7 +69,6 @@ namespace Controllers
                 return NotFound();
             }
 
-            // Обновление свойств существующего объекта
             existingAnswerOption.Text = request.Text;
 
             _unitOfWork.AnswerRepo.Update(existingAnswerOption);
@@ -94,11 +93,4 @@ namespace Controllers
         }
     }
 
-    public class AnswerOptionRequest
-    {
-        public required string Text {get; set;}
-        public bool Correct {get; set;}
-
-    }
-    
 }
