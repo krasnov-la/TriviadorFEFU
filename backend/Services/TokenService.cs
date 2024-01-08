@@ -27,7 +27,7 @@ public class TokenService : ITokenService
             issuer: "https://localhost:7021",
             audience: "https://localhost:7021",
             claims: claims,
-            expires: DateTime.Now.AddMinutes(5),
+            expires: DateTime.Now.AddHours(3),
             signingCredentials: signinCredentials
         );
 
