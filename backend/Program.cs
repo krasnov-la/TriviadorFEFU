@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Services;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           policy.WithOrigins("http://localhost:9000");
-                          policy.WithHeaders("x-requested-with", "x-signalr-user-agent");
+                          policy.WithHeaders("x-requested-with", "x-signalr-user-agent", "authorization");
                           policy.WithMethods("GET", "POST");
                           policy.AllowCredentials();
                       });
@@ -31,6 +32,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetSection("connectionStrings").GetSection("default").Value));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<IUserIdProvider, IdProvider>();
 builder.Services.AddAuthentication(opt =>
 {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -42,6 +44,23 @@ builder.Services.AddAuthentication(opt =>
     options.Audience = "https://localhost:7021";
     options.Authority = "https://localhost:7021";
     options.Configuration = new OpenIdConnectConfiguration();
+    options.Events = new JwtBearerEvents
+      {
+          OnMessageReceived = context =>
+          {
+              var accessToken = context.Request.Query["access_token"];
+
+              // If the request is for our hub...
+              var path = context.HttpContext.Request.Path;
+              if (!string.IsNullOrEmpty(accessToken) &&
+                  path.StartsWithSegments("/Game"))
+              {
+                  // Read the token out of the query string
+                  context.Token = accessToken;
+              }
+              return Task.CompletedTask;
+          }
+      };
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
