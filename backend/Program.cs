@@ -15,12 +15,14 @@ const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins, policy => 
-    { 
-        policy.AllowAnyHeader();
-        policy.AllowAnyMethod();
-        policy.AllowAnyOrigin();
-    });
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:9000");
+                          policy.WithHeaders("x-requested-with", "x-signalr-user-agent");
+                          policy.WithMethods("GET", "POST");
+                          policy.AllowCredentials();
+                      });
 });
 
 builder.Services.AddControllers();
