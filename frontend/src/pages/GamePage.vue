@@ -12,7 +12,7 @@
   import * as signalR from "@microsoft/signalr";
 
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/Game")
+    .withUrl("https://localhost:5144/Game")
     .configureLogging(signalR.LogLevel.Information)
     .build();
 

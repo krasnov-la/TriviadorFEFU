@@ -11,9 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("secret.json", false);
 
+const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "_myAllowSpecificOrigins", policy => { policy.WithOrigins("*"); policy.WithHeaders("*"); });
+    options.AddPolicy(name: MyAllowSpecificOrigins, policy => 
+    { 
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+        policy.AllowAnyOrigin();
+    });
 });
 
 builder.Services.AddControllers();
@@ -57,6 +64,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseHttpsRedirection();
 
