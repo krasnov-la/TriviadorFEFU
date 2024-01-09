@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Services;
 using Microsoft.AspNetCore.SignalR;
+using Game;
 
 var builder = WebApplication.CreateBuilder(args);
 
