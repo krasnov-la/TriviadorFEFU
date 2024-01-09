@@ -12,7 +12,6 @@ public interface IGameClient
     public Task ExpandChoise(string login, int areaId);
     public Task ExpandChoisesDrop();
     public Task EndTurn();
-    public Task ChoiseInvalid();
     public Task<bool> AskQuestion(Guid questionId);
     public Task WrongOrderMove(string expected, string actual);
 }

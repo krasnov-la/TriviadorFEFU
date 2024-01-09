@@ -109,7 +109,7 @@ public sealed class GameHub : Hub<IGameClient>
         _expandChoises[user] = areaId;
         await Clients.Users(game.Players.Keys).ExpandChoise(user, areaId);
         if (_expandChoises.Count == game.Players.Count)
-            AskQuestion(gameId);
+            await AskQuestion(gameId);
         
         StartTurn(gameId);
     }
