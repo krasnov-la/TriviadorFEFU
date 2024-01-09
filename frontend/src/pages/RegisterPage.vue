@@ -18,7 +18,7 @@ const passwordRepeat = ref('');
 const isPwd = ref(true);
 const school = ref('');
 
-const error = ref('');
+const errorMes = ref('');
 
 const $q = useQuasar();
 
@@ -29,70 +29,71 @@ const stringOptions = [
 const usernameRules = [
   (val?: string) => (val && val.length > 0) || 'Please enter username'
 ];
+
 const passwordRules = [
   (val?: string) => (val && val.length > 0) || 'Please enter password'
 ];
 
+const schoolRules = [
+  (val?: string) => (val && val.length > 0) || 'Please choose school'
+];
+
+const nameRules = [
+  (val?: string) => (val && val.length > 0) || 'Please enter display name'
+];
+
 const submitForm = () => {
-  error.value = '';
+  errorMes.value = '';
 
   const formData = {
     login: login.value,
-    password: password.value,
     displayName: displayName.value,
+    password: password.value,
     school: school.value,
   };
 
-  if (login.value === '' || password.value === '') {
+  if (login.value === '' || password.value === ''
+    || school.value === '' || displayName.value === '')
     return;
-  }
 
-  api.post('/Auth/Reg', formData) //TODO: complete with api
+  api.post('/Auth/Registrate', formData)
     .then(response => {
 
-      const msg = response.data.msg;
-
-
-      const accessToken = response.data.data.accessToken;
-      const refreshToken = response.data.data.refreshToken;
+      const accessToken = response.data.accessToken;
+      const refreshToken = response.data.refreshToken;
 
       LocalStorage.set('accessToken', accessToken);
       LocalStorage.set('refreshToken', refreshToken);
-      LocalStorage.set('email', login.value);
+      //LocalStorage.set('login', login.value); ???
 
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-      $q.notify({
-        message: 'Successful log in!',
-        color: 'green-4',
-        textColor: 'white',
-        position: 'top',
-        timeout: 1000
-      });
-      authGet('/Auth/GetMyself')
-        .then(response => {
-          const role = response.data.data.user.roleName;
-          console.log(role);
-
-          if (role === 'Administrator')
-            Router.push({ path: '/admin' });
-          if (role === 'User')
-            Router.push({ path: '/user' });
-
-          LocalStorage.set('roleName', role);
-        });
-    });
+      if(response.status === 200){
+        Router.push('/lobby')
+      }
+      // authGet('/Auth/GetMyself')
+      //   .then(response => {
+      //     const role = response.data.data.user.roleName;
+      //     console.log(role);
+      //
+      //     if (role === 'Administrator')
+      //       Router.push({ path: '/admin' });
+      //     if (role === 'User')
+      //       Router.push({ path: '/user' });
+      //
+      //     LocalStorage.set('roleName', role);
+      //   });
+    })
+    .catch(error => {
+    console.log(error);
+    errorMes.value = 'Login already taken';
+  })
 };
 
 const closeBanner = () => {
-  error.value = '';
+  errorMes.value = '';
   return;
 };
-
-function exit() {
-  Router.push('/');
-  return;
-}
 </script>
 
 <template>
@@ -119,15 +120,16 @@ function exit() {
             outlined
             dense
             lazy-rules
-            :rules='usernameRules'
+            :rules='nameRules'
           />
-          <div class="q-gutter-md row q-mb-md">
+          <div class="q-gutter-md row">
             <q-select
               :dense="true"
               outlined
               v-model="school"
               label="School"
               :options="stringOptions"
+              :rules="schoolRules"
               style="width: 300px"
               behavior="dialog"
             />
@@ -170,13 +172,13 @@ function exit() {
         <q-card-section class='q-py-none'>
           <div>
             <q-banner
-              v-if='error !== ""'
+              v-if='errorMes !== ""'
               class='relative fit bg-red-2 text-negative row'
               style='border-radius: 10px'
               @submit.prevent='submitForm'
             >
               <div class='row justify-center'>
-                {{ error }}
+                {{ errorMes }}
               </div>
               <q-btn round flat size='8px'
                      @click='closeBanner'
@@ -188,7 +190,7 @@ function exit() {
           </div>
           <div class='row full-width justify-between q-pt-md q-px-md'>
             <q-btn class='col-4' color='primary' label='Reg in' type='submit' />
-            <q-btn @click='exit' class='col-4' color='primary' label='Back' />
+            <q-btn to="/" class='col-4' color='primary' label='Back' />
           </div>
         </q-card-section>
       </q-form>
@@ -196,4 +198,30 @@ function exit() {
   </q-page>
 </template>
 
-<style scoped lang='sass'></style>
+<style lang="sass">
+body
+  background-color: #4481eb
+  background-image: linear-gradient(to top, #4481eb 0%, #04befe 100%)
+
+.profile
+  text-decoration: none
+  color: black
+  display: block
+  position: relative
+
+  &:after
+    position: absolute
+    bottom: 0
+    left: 0
+    right: 0
+    margin: auto
+    width: 0
+    content: '.'
+    color: transparent
+    background: black
+    height: 1px
+    transition: all 0.3s
+
+  &:hover:after
+    width: 100%
+</style>

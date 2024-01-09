@@ -1,14 +1,18 @@
 <script setup lang='ts'>
 import { ref } from 'vue';
+import { api } from 'src/boot/axios';
 import { useQuasar } from 'quasar';
+import { LocalStorage } from 'quasar';
 import { Router } from "src/router";
 
-const email = ref('');
+const login = ref('');
 const password = ref('');
 
 const isPwd = ref(true);
 
-const error = ref('');
+const errorMes = ref('');
+
+const $q = useQuasar();
 
 const usernameRules = [
   (val?: string) => (val && val.length > 0) || 'Please enter username'
@@ -17,18 +21,49 @@ const passwordRules = [
   (val?: string) => (val && val.length > 0) || 'Please enter password'
 ];
 
+const submitForm = () => {
+  errorMes.value = '';
+
+  const formData = {
+    login: login.value,
+    password: password.value
+  };
+
+
+api.post('/Auth/Login',formData)
+  .then(response => {
+    console.log(response)
+    const accessToken = response.data.accessToken;
+    const refreshToken = response.data.refreshToken;
+
+    LocalStorage.set('accessToken', accessToken);
+    LocalStorage.set('refreshToken', refreshToken);
+    //LocalStorage.set('email', login.value); ???
+
+    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    if (response.status === 200){
+      Router.push('/lobby');
+    }
+  })
+  .catch(error => {
+    console.log(error);
+    errorMes.value = 'Wrong username or password';
+  })
+};
+
 const closeBanner = () => {
-  error.value = '';
+  errorMes.value = '';
   return;
 };
 
 function exit() {
   window.close();
   return;
-}
+};
 
 function toReg() {
-  Router.push('/reg');
+  window.location.href = ''
+  //Router.push('/reg');
   return;
 }
 </script>
@@ -40,11 +75,11 @@ function toReg() {
       class='q-px-lg q-pt-lg q-mb-lg full-width column justify-center items-center'
       style='max-width: 25%'
     >
-      <q-form class='fit column'>
+      <q-form class='fit column' @submit='submitForm'>
         <q-card-section class='q-pb-none'>
           <q-input
             label='Email'
-            v-model='email'
+            v-model='login'
             outlined
             dense
             lazy-rules
@@ -71,12 +106,13 @@ function toReg() {
         <q-card-section class='q-py-none'>
           <div>
             <q-banner
-              v-if='error !== ""'
-              class='relative fit bg-red-2 text-negative row'
+              v-if='errorMes !== ""'
+              class='relative fit bg-red-2 text-negative row q-mb-md'
               style='border-radius: 10px'
+              @submit.prevent='submitForm'
             >
               <div class='row justify-center'>
-                {{ error }}
+                {{ errorMes }}
               </div>
               <q-btn round flat size='8px'
                      @click='closeBanner'
@@ -98,10 +134,36 @@ function toReg() {
     >
       <div class='row full-width justify-around q-pb-md'>
         <div class="q-pb-sm">Have not registered yet?</div>
-        <q-btn @click='toReg' class='col-11' color='primary' label='Register'/>
+        <q-btn to="/reg" class='col-11' color='primary' label='Register'/>
       </div>
     </q-card>
   </q-page>
 </template>
 
-<style scoped lang='sass'></style>
+<style lang="sass">
+body
+  background-color: #4481eb
+  background-image: linear-gradient(to top, #4481eb 0%, #04befe 100%)
+
+.profile
+  text-decoration: none
+  color: black
+  display: block
+  position: relative
+
+  &:after
+    position: absolute
+    bottom: 0
+    left: 0
+    right: 0
+    margin: auto
+    width: 0
+    content: '.'
+    color: transparent
+    background: black
+    height: 1px
+    transition: all 0.3s
+
+  &:hover:after
+    width: 100%
+</style>
