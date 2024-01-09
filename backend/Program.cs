@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           policy.WithOrigins("http://localhost:9000");
-                          policy.WithHeaders("x-requested-with", "x-signalr-user-agent", "authorization");
+                          policy.WithHeaders("x-requested-with", "x-signalr-user-agent", "authorization", "content-type");
                           policy.WithMethods("GET", "POST");
                           policy.AllowCredentials();
                       });

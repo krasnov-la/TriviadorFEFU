@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
     public IActionResult Registrate([FromBody] RegistrationRequest request)
     {
         var user = _unit.UserRepo.First(u => u.Login == request.Login);
-        if (user is not null) return Ok("Login already taken");
+        if (user is not null) return BadRequest("Login already taken");
 
         IEnumerable<Claim> claims = new List<Claim>()
             {
