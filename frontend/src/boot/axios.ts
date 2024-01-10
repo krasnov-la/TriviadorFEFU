@@ -1,12 +1,6 @@
 import { boot } from 'quasar/wrappers';
 import axios, { AxiosInstance } from 'axios';
-import _apiConfig from './apiConfig.json';
-
-interface ApiConfig {
-  baseUrl: string;
-}
-
-const apiConfig = _apiConfig as ApiConfig;
+import apiConfig from 'src/ApiConfig';
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
