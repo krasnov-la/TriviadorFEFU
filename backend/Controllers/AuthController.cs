@@ -101,7 +101,16 @@ public class AuthController : ControllerBase
         if (request.RefreshToken != user.RefreshToken || user.RefreshTokenExp < DateTime.Now)
             return BadRequest("Refresh token invalid");
 
-        var newAccessToken = _tokenService.GenerateAccessToken(principal.Claims);
+        var login = principal.FindFirst(ClaimTypes.Name);
+        var role = principal.FindFirst(ClaimTypes.Role);
+
+        if (login is null || role is null) return BadRequest("Access token invalid");
+
+        var newAccessToken = _tokenService.GenerateAccessToken(new List<Claim>()
+        {
+            login,
+            role
+        });
         var newRefreshToken = _tokenService.GenerateRefreshToken();
 
         user.RefreshToken = newRefreshToken;
