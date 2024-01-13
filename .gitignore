@@ -3,8 +3,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# Manually added ignore for .vscode
+# Manually...
+# ...added api confing for axios.ts
+apiConfig.json
+# ...added ignore for .vscode
 .vscode
+# ...added ignore for VS solutions file
+TriviadorFEFU.sln
 
 #pycharm
 .idea

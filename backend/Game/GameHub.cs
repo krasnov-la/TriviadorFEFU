@@ -10,7 +10,7 @@ public sealed class GameHub : Hub<IGameClient>
     static Dictionary<string, List<string>> _lobbies = new();
     static Dictionary<Guid, GameState> _games = new();
     static Dictionary<string, Guid> _players = new();
-    static Dictionary<string, int> _expandChoises = new();
+    static Dictionary<string, int?> _expandChoises = new();
 
     public async Task CreateLobby()
     {
@@ -54,7 +54,13 @@ public sealed class GameHub : Hub<IGameClient>
         game.Turn++;
         var user = game.Order[game.Turn % 9];
         game.ExpectedPlayer = user;
-        if (game.Turn == 3 || game.Turn == 21) game.Phase++;
+        if (game.Turn == 3) game.Phase++;
+
+        if (20 - game.Players.Select(p => p.Value.Areas.Count()).Sum() < 3)
+        {
+            Clients.Users(game.Players.Keys).GameEnd();
+            return;
+        }
         
         switch (game.Phase)
         {
@@ -66,10 +72,10 @@ public sealed class GameHub : Hub<IGameClient>
                 Clients.Users(game.Players.Keys)
                 .StartTurnExpand(user);
                 break;
-            case GamePhase.Duel: 
-                 Clients.Users(game.Players.Keys)
-                .StartTurnDuel(user);
-                break;
+            // case GamePhase.Duel: 
+            //      Clients.Users(game.Players.Keys)
+            //     .StartTurnDuel(user);
+            //     break;
         }
     }
 
@@ -88,17 +94,25 @@ public sealed class GameHub : Hub<IGameClient>
         game.Players[user].MainArea = areaId;
         
         game.Players[user].Areas = game.Players[user].Areas.Append(areaId);
+        AddScore(game.Players[user], 200) ;
         await Clients.Users(game.Players.Keys).Obtain(user, areaId);
         await Clients.Users(game.Players.Keys).EndTurn();
 
         StartTurn(gameId);
     }
 
-    public async Task ChooseExpand(int areaId)
+    public async Task ChooseExpand(int? areaId)
     {
         var user = Context.UserIdentifier;
         var gameId = _players[user];
         var game = _games[gameId];
+
+        if (areaId is null)
+        {
+            StartTurn(gameId);
+            return;
+        }
+
         if (game.ExpectedPlayer != user)
         {
             await Clients.Caller.WrongOrderMove(game.ExpectedPlayer, user);
@@ -109,7 +123,7 @@ public sealed class GameHub : Hub<IGameClient>
         _expandChoises[user] = areaId;
         await Clients.Users(game.Players.Keys).ExpandChoise(user, areaId);
         if (_expandChoises.Count == game.Players.Count)
-            AskQuestion(gameId);
+            await AskQuestion(gameId);
         
         StartTurn(gameId);
     }
@@ -130,8 +144,24 @@ public sealed class GameHub : Hub<IGameClient>
 
         foreach (var pair in answers)
             if (pair.Value.Result)
-                await Clients.Users(group).Obtain(pair.Key, _expandChoises[pair.Key]);
+            {
+                var choice = _expandChoises[pair.Key];
+                var player = _games[gameId].Players[pair.Key];
+                if (choice is null)
+                {
+                    AddScore(player, 100);
+                    return;
+                }
+                AddScore(player, 200);
+                await Clients.Users(group).Obtain(pair.Key, (int)choice);
+            }
         
         _expandChoises.Clear();
-    } 
+    }
+
+    void AddScore(PlayerState player, int add)
+    {
+        lock (player)
+            player.Score += add;
+    }
 }

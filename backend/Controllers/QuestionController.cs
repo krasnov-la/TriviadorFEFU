@@ -3,6 +3,7 @@ using DataAccess.Models;
 using DataAccess.Repository;
 using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Controllers
 {
@@ -20,13 +21,13 @@ namespace Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Question>> Get()
         {
-            return _unitOfWork.QuestionRepo.All().ToList();
+            return _unitOfWork.QuestionRepo.Where(q => true).Include(q => q.Options).ToList();
         }
 
         [HttpGet("{id}")]
         public ActionResult<Question> Get(Guid id)
         {
-            var question = _unitOfWork.QuestionRepo.First(x => x.Id == id);
+            var question = _unitOfWork.QuestionRepo.Where(x => x.Id == id).Include(q => q.Options).First();
 
             if (question == null)
             {
