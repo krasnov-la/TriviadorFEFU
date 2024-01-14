@@ -17,4 +17,5 @@ public class User
     public int Rating {get; set;} = 0;
     public string? RefreshToken {get; set;}
     public DateTime? RefreshTokenExp {get; set;}
+    public string? ImgPath { get; set; }
 }
