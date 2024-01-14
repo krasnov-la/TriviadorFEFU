@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { QTableProps } from 'quasar';
-import ProfilePopup from 'src/components/ProfilePopup.vue';
-import * as signalR from '@microsoft/signalr';
-import apiConfig from 'src/ApiConfig';
 import { useAuthStore } from 'src/stores/auth';
+import { useUserDataStore } from 'src/stores/user-data';
+
+import ProfilePopup from 'src/components/ProfilePopup.vue';
+import apiConfig from 'src/ApiConfig';
+
+import * as signalR from '@microsoft/signalr';
+import { Router } from 'src/router';
 
 const state = reactive({
   rows: [
@@ -57,6 +61,7 @@ const tColumns: QTableProps = {
 };
 
 const authStore = useAuthStore();
+const userDataStore = useUserDataStore();
 
 const getAccessToken = async () => {
   await authStore.updateTokensByServer();
@@ -90,17 +95,28 @@ start();
 
 connection.on('LobbyTerminated', () => {
   hostRegimeActive.value = false;
+
+  console.log('LobbyTerminated');
 });
 
 connection.on('JoinLobby', (logins) => {
   hostRegimeActive.value = true;
   joiningToGameLoadBarActive.value = false;
   inputIdActive.value = false;
+
   console.log('JoinLobby');
 });
 
 connection.on('LobbyNotFound', () => {
   joiningToGameLoadBarActive.value = false;
+
+  console.log('LobbyNotFound');
+});
+
+connection.on('GameStart', () => {
+  Router.push('/game');
+
+  console.log('Game');
 });
 
 const sortedRows = computed(() => {
@@ -111,6 +127,8 @@ const sortedRows = computed(() => {
 
 const createLobby = () => {
   connection.send('CreateLobby');
+  connectedLobbyId.value = userDataStore.getUserData.login;
+
   console.log('CreateLobby');
 };
 
@@ -118,14 +136,17 @@ const joinLobby = () => {
   if (gameIdToConnect.value == null)
     throw new Error('gameIdToConnect.value is null');
   connection.send('JoinLobby', gameIdToConnect.value);
+  connectedLobbyId.value = gameIdToConnect.value;
+
+  console.log('JoinLobby');
 };
 
 const profileActive = ref(false);
 const hostRegimeActive = ref(false);
 const inputIdActive = ref(false);
 const joiningToGameLoadBarActive = ref(false);
-
 const gameIdToConnect = ref<string | null>(null);
+const connectedLobbyId = ref<string | null>(null);
 
 const showProfile = () => {
   profileActive.value = true;
@@ -133,10 +154,6 @@ const showProfile = () => {
 
 const closeProfile = () => {
   profileActive.value = false;
-};
-
-const createGame = () => {
-  hostRegimeActive.value = true;
 };
 
 const endGame = () => {
@@ -250,7 +267,7 @@ const endGame = () => {
         <div class="row row-4 justify-center">
           <q-input
             class="column col-5 q-pr-sm"
-            v-model="gameIdToConnect"
+            v-model="connectedLobbyId"
             readonly
             label="Game ID"
             stack-label
@@ -297,6 +314,7 @@ const endGame = () => {
     </q-card>
   </q-dialog>
 </template>
+
 <style lang="sass">
 body
   background-color: #4481eb

@@ -33,7 +33,7 @@ public sealed class GameHub : Hub<IGameClient>
         _lobbies[owner].Add(Context.UserIdentifier);
         await Clients.Caller.JoinLobby(_lobbies[owner]);
 
-        if (_lobbies[owner].Count == 3)
+        if (_lobbies[owner].Count == 4)
             await GameStart(owner);
     }
 

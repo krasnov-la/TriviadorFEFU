@@ -4,6 +4,8 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import apiConfig from 'src/ApiConfig';
 
+import * as LSPath from 'src/LocalStoragePaths';
+
 interface ITokenList {
   accessToken: string | null;
   refreshToken: string | null;
@@ -12,13 +14,13 @@ interface ITokenList {
 const updateLocalStorage = () => {
   const tokens = useAuthStore().getTokens;
 
-  LocalStorage.set('accessToken', tokens.accessToken);
-  LocalStorage.set('refreshToken', tokens.refreshToken);
+  LocalStorage.set(LSPath.accessToken, tokens.accessToken);
+  LocalStorage.set(LSPath.refreshToken, tokens.refreshToken);
 };
 
 const getFromLocalStorage = () => {
-  const accessTokenItem = LocalStorage.getItem('accessToken');
-  const refreshTokenItem = LocalStorage.getItem('refreshToken');
+  const accessTokenItem = LocalStorage.getItem(LSPath.accessToken);
+  const refreshTokenItem = LocalStorage.getItem(LSPath.refreshToken);
 
   if (accessTokenItem == null || refreshTokenItem == null) {
     return {
@@ -69,6 +71,7 @@ export const useAuthStore = defineStore('auth', {
     updateTokensManually(tokens: ITokenList): void {
       this.accessToken = tokens.accessToken;
       this.refreshToken = tokens.refreshToken;
+      //updateLocalStorage(); - nado ili net?
     },
   },
 

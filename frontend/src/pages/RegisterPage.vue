@@ -2,13 +2,10 @@
 import { ref } from 'vue';
 import { api } from 'src/boot/axios';
 import { useQuasar } from 'quasar';
-
-import { LocalStorage } from 'quasar';
-import { authGet } from 'src/utils';
-
 import { Router } from 'src/router';
 
 import { useAuthStore } from 'src/stores/auth';
+import { useUserDataStore } from 'src/stores/user-data';
 
 const login = ref('');
 const displayName = ref('');
@@ -19,8 +16,6 @@ const isPwd = ref(true);
 const school = ref('');
 
 const errorMes = ref('');
-
-const $q = useQuasar();
 
 const stringOptions = ['ИМКТ', 'ВИ-ШРМИ', 'Политех', 'Мед', 'ШМИ'];
 
@@ -67,6 +62,12 @@ const submitForm = () => {
       useAuthStore().updateTokensManually({
         accessToken,
         refreshToken,
+      });
+
+      useUserDataStore().updateUserDataLocally({
+        login: formData.login,
+        displayName: formData.displayName,
+        school: formData.school,
       });
 
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
