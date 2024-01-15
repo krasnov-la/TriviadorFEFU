@@ -3,6 +3,7 @@ public interface IGameClient
 {
     public Task LobbyTerminated();
     public Task JoinLobby(IEnumerable<string> logins);
+    public Task UpdateLobby(string login);
     public Task LobbyNotFound();
     public Task GameStart();
     public Task StartTurnInit(string login);
