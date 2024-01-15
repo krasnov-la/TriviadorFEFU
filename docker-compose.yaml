@@ -1,0 +1,19 @@
+version: '3'
+services:
+  server:
+    build: ./backend
+    environment:
+      - DbConnect: Server=postgres;port=5432;Database=postgres;User Id=postgres;Password=mysecretpassword
+      - Jwt: qcWhTgE7kpr2u;Rn,?C!95
+    depends_on:
+      - postgres
+    ports:
+      - 5000:80
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: mysecretpassword
+    ports:
+      - 5001:5432
