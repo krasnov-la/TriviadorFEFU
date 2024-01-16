@@ -40,10 +40,11 @@ const submitForm = () => {
         refreshToken,
       });
 
+      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
       const userDataStore = useUserDataStore();
       userDataStore.getUserDataFromServer();
 
-      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       if (response.status === 200) {
         Router.push('/lobby');
       }

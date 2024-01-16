@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { LocalStorage } from 'quasar';
+import { api } from 'src/boot/axios';
 
 import * as LSPath from 'src/LocalStoragePaths';
 
@@ -64,7 +65,17 @@ export const useUserDataStore = defineStore('user-data', {
     },
 
     getUserDataFromServer(): void {
-      return;
+      api
+        .get('/UserInfo/GetMyself')
+        .then((response) => {
+          this.login = response.data.login;
+          this.displayName = response.data.displayName;
+          this.school = response.data.school;
+          updateLocalStorage();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 });

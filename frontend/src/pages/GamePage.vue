@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, toValue } from 'vue';
+import { ref } from 'vue';
 import { establishConnection, startConnection } from 'src/SignalRUtils';
 import { useUserDataStore } from 'src/stores/user-data';
 
 import QuestionPopup from 'src/components/QuestionPopup.vue';
-import internal from 'stream';
 
 const active = ref(false);
 const avatarSrcPlayer1 = ref('https://cdn.quasar.dev/img/avatar2.jpg');
@@ -23,13 +22,11 @@ const connection = establishConnection();
 startConnection(connection);
 
 connection.on('StartTurnInit', (login) => {
-  if (isMyTurn()) {
-  }
+  const myLogin = userDataStore.getUserData.login;
+  if (myLogin == null) throw new Error('login = null');
+  if (myLogin == login) myInitTurnStarted();
+  else myInitTurnEnded();
 });
-
-const isMyTurn = (login: string) => {
-  return login == userDataStore.getUserData.login;
-};
 
 const columns = [
   {
@@ -49,11 +46,19 @@ const setCell = (element: Element, value: string) => {
   cells[value] = element;
 };
 const cellsIsActive = ref(false);
+
+const myInitTurnStarted = () => {
+  cellsIsActive.value = true;
+};
+
+const myInitTurnEnded = () => {
+  cellsIsActive.value = true;
+};
 </script>
 
 <template>
   <q-page class="row justify-around items-center">
-    <q-card @click="send" fit style="width: 80%; height: 600px" class="column">
+    <q-card fit style="width: 80%; height: 600px" class="column">
       <q-table
         flat
         bordered

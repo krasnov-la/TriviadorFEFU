@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { api } from 'src/boot/axios';
-import { useQuasar } from 'quasar';
 import { Router } from 'src/router';
 
 import { useAuthStore } from 'src/stores/auth';
