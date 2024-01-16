@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { QTableProps } from 'quasar';
-import { useAuthStore } from 'src/stores/auth';
 import { useUserDataStore } from 'src/stores/user-data';
+import { Router } from 'src/router';
+import { api } from 'src/boot/axios';
+import { establishConnection, startConnection } from 'src/SignalRUtils';
 
 import ProfilePopup from 'src/components/ProfilePopup.vue';
-import apiConfig from 'src/ApiConfig';
-
-import * as signalR from '@microsoft/signalr';
-import { Router } from 'src/router';
 
 const state = reactive({
   rows: [
@@ -60,38 +58,10 @@ const tColumns: QTableProps = {
   ],
 };
 
-const authStore = useAuthStore();
 const userDataStore = useUserDataStore();
 
-const getAccessToken = async () => {
-  await authStore.updateTokensByServer();
-  const accessToken = authStore.getTokens.accessToken;
-  if (accessToken == null) throw new Error('accessToken is null');
-  return accessToken;
-};
-
-const connection = new signalR.HubConnectionBuilder()
-  .withUrl(apiConfig.baseUrl + '/Game', {
-    accessTokenFactory: getAccessToken,
-  })
-  .configureLogging(signalR.LogLevel.Information)
-  .build();
-
-async function start() {
-  try {
-    await connection.start();
-    console.log('SignalR Connected.');
-  } catch (err) {
-    console.log(err);
-    setTimeout(start, 5000);
-  }
-}
-
-connection.onclose(async () => {
-  await start();
-});
-
-start();
+const connection = establishConnection();
+startConnection(connection);
 
 connection.on('LobbyTerminated', () => {
   hostRegimeActive.value = false;
@@ -99,13 +69,33 @@ connection.on('LobbyTerminated', () => {
   console.log('LobbyTerminated');
 });
 
+connection.on('UpdateLobby', (login) => {
+  addPlayerToLobby(login);
+
+  console.log('UpdateLobby');
+});
+
 connection.on('JoinLobby', (logins) => {
   hostRegimeActive.value = true;
   joiningToGameLoadBarActive.value = false;
   inputIdActive.value = false;
 
+  logins.forEach((login: string) => addPlayerToLobby(login));
+
   console.log('JoinLobby');
 });
+
+const addPlayerToLobby = (login: string) => {
+  if (login == userDataStore.login) return;
+  api.get(`/UserInfo/${login}`).then((response) => {
+    const playerData: IPlayerData = {
+      login: response.data.login,
+      displayName: response.data.displayName,
+      school: response.data.school,
+    };
+    lobbyPlayers[login] = playerData;
+  });
+};
 
 connection.on('LobbyNotFound', () => {
   joiningToGameLoadBarActive.value = false;
@@ -147,6 +137,14 @@ const inputIdActive = ref(false);
 const joiningToGameLoadBarActive = ref(false);
 const gameIdToConnect = ref<string | null>(null);
 const connectedLobbyId = ref<string | null>(null);
+
+interface IPlayerData {
+  login: string;
+  displayName: string;
+  school: string;
+}
+
+const lobbyPlayers = reactive<{ [login: string]: IPlayerData }>({});
 
 const showProfile = () => {
   profileActive.value = true;
@@ -191,7 +189,7 @@ const endGame = () => {
         style="font-size: 20px"
         :class="{ invisible: !hostRegimeActive }"
       >
-        Players: {{ state.groupList.length + 1 }}/4
+        Players: {{ Object.keys(lobbyPlayers).length + 1 }}/4
       </div>
       <!--Player profile-->
       <div class="col-3 q-ml-xs q-mr-xs" @click="showProfile">
@@ -218,7 +216,7 @@ const endGame = () => {
         <div
           class="row q-py-xs q-mb-md"
           style="border: 1px solid #7c7c7c; border-radius: 15px"
-          v-for="member in state.groupList"
+          v-for="member in lobbyPlayers"
           :key="member"
         >
           <div class="col-2 q-ml-xs">
