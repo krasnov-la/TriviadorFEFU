@@ -17,7 +17,6 @@ namespace Controllers
             _unitOfWork = unitOfWork;
         }
 
-        // Получить рейтинг школы (сумма учеников каждой школы)
         [HttpGet("ratings")]
         public IActionResult GetSchoolRatings()
         {
@@ -33,7 +32,6 @@ namespace Controllers
         }
 
 
-        // Получить N лучших учеников по школе
         [HttpGet("top-students-by-school")]
         public IActionResult GetTopStudentsBySchool(int n, string school)
         {
@@ -47,7 +45,7 @@ namespace Controllers
             return Ok(topStudentsBySchool);
         }
 
-        // Получить N лучших учеников без учета школы
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ N пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         [HttpGet("top-students")]
         public IActionResult GetTopStudentsOverall(int n)
         {

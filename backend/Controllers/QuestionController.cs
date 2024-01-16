@@ -40,22 +40,17 @@ namespace Controllers
         [HttpPost]
         public ActionResult<Question> Post([FromBody] QuestionRequest request)
         {
-            if (ModelState.IsValid)
-            {
-                var question = new Question
-                {
-                    Text = request.Text,
-                };
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                _unitOfWork.QuestionRepo.Add(question);
-                _unitOfWork.Save();
-
-                return Ok(question);
-            }
-            else
+            var question = new Question
             {
-                return BadRequest(ModelState);
-            }
+                Text = request.Text,
+            };
+
+            _unitOfWork.QuestionRepo.Add(question);
+            _unitOfWork.Save();
+
+            return Ok(question);
         }
 
         [HttpPut("{id}")]
