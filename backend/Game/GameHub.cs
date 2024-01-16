@@ -30,7 +30,9 @@ public sealed class GameHub : Hub<IGameClient>
             return;
         }
 
-        _lobbies[owner].Add(Context.UserIdentifier);
+        string caller = Context.UserIdentifier;
+        _lobbies[owner].Add(caller);
+        await Clients.Users(_lobbies[owner]).UpdateLobby(caller);
         await Clients.Caller.JoinLobby(_lobbies[owner]);
 
         if (_lobbies[owner].Count == 4)
