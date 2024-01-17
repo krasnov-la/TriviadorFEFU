@@ -9,9 +9,16 @@ public sealed class GameHub : Hub<IGameClient>
 {
     static Dictionary<string, List<string>> _lobbies = new();
     static Dictionary<Guid, GameState> _games = new();
+    static Dictionary<string, string> _lastConnection = new();
     static Dictionary<string, Guid> _players = new();
     static Dictionary<string, int?> _expandChoises = new();
 
+    public override async Task OnConnectedAsync()
+    {
+        string user = Context.UserIdentifier;
+        _lastConnection[user] = Context.ConnectionId;
+        return;
+    }
     public async Task CreateLobby()
     {
         var owner = Context.UserIdentifier;
@@ -30,9 +37,9 @@ public sealed class GameHub : Hub<IGameClient>
             return;
         }
 
-        string caller = Context.UserIdentifier;
-        _lobbies[owner].Add(caller);
-        await Clients.Users(_lobbies[owner]).UpdateLobby(caller);
+        string callerLogin = Context.UserIdentifier;
+        _lobbies[owner].Add(callerLogin);
+        await Clients.Users(_lobbies[owner]).UpdateLobby(callerLogin);
         await Clients.Caller.JoinLobby(_lobbies[owner]);
 
         //TODO: change to 4
@@ -141,7 +148,7 @@ public sealed class GameHub : Hub<IGameClient>
 
         Dictionary<string, Task<bool>> answers = new();
         foreach (var user in group)
-            answers.Add(user, Clients.User(user).AskQuestion(guid));
+            answers.Add(user, Clients.Client(_lastConnection[user]).AskQuestion(guid));
 
         await Task.WhenAll(answers.Values);
 
