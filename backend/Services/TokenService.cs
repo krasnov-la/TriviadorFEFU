@@ -11,10 +11,10 @@ public class TokenService : ITokenService
 {
     private readonly string _jwtKey;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService()
     {
-        string? jwtKey = configuration.GetSection("JwtKey").Value;
-        if (jwtKey is null) throw new FileLoadException("File containing keys is not valid");
+        string? jwtKey = Environment.GetEnvironmentVariable("Jwt");
+        if (jwtKey is null) throw new KeyNotFoundException("JwtKey env variable not set");
         _jwtKey = jwtKey;
     }
 
@@ -24,8 +24,8 @@ public class TokenService : ITokenService
         var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
         var tokenOptions = new JwtSecurityToken(
-            issuer: "https://localhost:7021",
-            audience: "https://localhost:7021",
+            issuer: "fefudor/api",
+            audience: "fefudor/client",
             claims: claims,
             expires: DateTime.Now.AddHours(3),
             signingCredentials: signinCredentials

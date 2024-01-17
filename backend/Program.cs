@@ -11,8 +11,6 @@ using Game;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("secret.json", false);
-
 const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddCors(options =>
@@ -68,8 +66,8 @@ builder.Services.AddAuthentication(opt =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "https://localhost:7021",
-        ValidAudience = "https://localhost:7021",
+        ValidIssuer = "fefudor/api",
+        ValidAudience = "fefudor/client",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Jwt")))
     };
 });
