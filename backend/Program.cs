@@ -8,8 +8,20 @@ using System.Text;
 using Services;
 using Microsoft.AspNetCore.SignalR;
 using Game;
+using Utils;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+StaticDetails.DbConnection = Environment.GetEnvironmentVariable("DbConnect");
+StaticDetails.JwtKey = Environment.GetEnvironmentVariable("Jwt");
+
+if (StaticDetails.DbConnection is null)
+{
+    Secret? secret = JsonSerializer.Deserialize<Secret?>(File.ReadAllText("secret.json"));
+    StaticDetails.DbConnection = secret?.Database;
+    StaticDetails.JwtKey = secret?.JwtKey;
+}
 
 const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -28,7 +40,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(Environment.GetEnvironmentVariable("DbConnect")));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(StaticDetails.DbConnection));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton<IUserIdProvider, IdProvider>();
@@ -68,7 +80,7 @@ builder.Services.AddAuthentication(opt =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = "fefudor/api",
         ValidAudience = "fefudor/client",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Jwt")))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(StaticDetails.JwtKey))
     };
 });
 
