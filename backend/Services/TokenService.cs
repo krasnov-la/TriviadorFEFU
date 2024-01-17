@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Utils;
 
 namespace Services;
 
@@ -13,9 +14,8 @@ public class TokenService : ITokenService
 
     public TokenService()
     {
-        string? jwtKey = Environment.GetEnvironmentVariable("Jwt");
-        if (jwtKey is null) throw new KeyNotFoundException("JwtKey env variable not set");
-        _jwtKey = jwtKey;
+        if (StaticDetails.JwtKey is null) throw new KeyNotFoundException("JwtKey env variable not set");
+        _jwtKey = StaticDetails.JwtKey;
     }
 
     public string GenerateAccessToken(IEnumerable<Claim> claims)
