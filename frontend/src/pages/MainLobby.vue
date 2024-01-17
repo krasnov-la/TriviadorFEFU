@@ -2,9 +2,14 @@
 import { ref, reactive, computed } from 'vue';
 import { QTableProps } from 'quasar';
 import { useUserDataStore } from 'src/stores/user-data';
+import { GamePhases, useGameStore } from 'src/stores/game-store';
 import { Router } from 'src/router';
-import { api } from 'src/boot/axios';
-import { establishConnection, startConnection } from 'src/SignalRUtils';
+import axios, { api } from 'src/boot/axios';
+import {
+  establishConnection,
+  startConnection,
+  stopConnection,
+} from 'src/SignalRUtils';
 
 import ProfilePopup from 'src/components/ProfilePopup.vue';
 
@@ -59,6 +64,7 @@ const tColumns: QTableProps = {
 };
 
 const userDataStore = useUserDataStore();
+const gameStore = useGameStore();
 
 const connection = establishConnection();
 startConnection(connection);
@@ -104,9 +110,24 @@ connection.on('LobbyNotFound', () => {
 });
 
 connection.on('GameStart', () => {
-  Router.push('/game');
+  gameStore.inGame = true;
+  gameStore.playersAreas = {};
+  gameStore.gamePhase = GamePhases.Init;
 
-  console.log('Game');
+  console.log('GameStart');
+});
+
+connection.on('StartTurnInit', (login) => {
+  gameStore.playerTurnLogin = login;
+  gameStore.playersAreas[login] = [];
+  gameStore.updateLS();
+
+  stopConnection(connection);
+  setTimeout(() => {
+    Router.push('/game');
+  }, 5000);
+
+  console.log('StartTurnInit (ML): ' + String(login));
 });
 
 const sortedRows = computed(() => {

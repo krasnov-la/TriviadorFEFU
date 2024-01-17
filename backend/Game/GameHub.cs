@@ -35,7 +35,8 @@ public sealed class GameHub : Hub<IGameClient>
         await Clients.Users(_lobbies[owner]).UpdateLobby(caller);
         await Clients.Caller.JoinLobby(_lobbies[owner]);
 
-        if (_lobbies[owner].Count == 4)
+        //TODO: change to 4
+        if (_lobbies[owner].Count == 2)
             await GameStart(owner);
     }
 
@@ -54,9 +55,11 @@ public sealed class GameHub : Hub<IGameClient>
     {
         var game = _games[gameId];
         game.Turn++;
-        var user = game.Order[game.Turn % 9];
+        //TODO: change to 9
+        var user = game.Order[game.Turn % 4];
         game.ExpectedPlayer = user;
-        if (game.Turn == 3) game.Phase++;
+        //TODO: change to 3;
+        if (game.Turn == 2) game.Phase++;
 
         if (20 - game.Players.Select(p => p.Value.Areas.Count()).Sum() < 3)
         {

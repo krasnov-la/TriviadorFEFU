@@ -32,9 +32,25 @@ export const startConnection = (connection: signalR.HubConnection) => {
     }
   };
 
-  connection.onclose(async () => {
-    await start();
-  });
+  //TODO: solve multi-open connection problem
+
+  // connection.onclose(async () => {
+  //   await start();
+  // });
 
   start();
+};
+
+export const stopConnection = (connection: signalR.HubConnection) => {
+  connection.onclose(() => {
+    console.log('OnClose method was emptied');
+  });
+  connection
+    .stop()
+    .then(() => {
+      console.log('SignalR Stopped.');
+    })
+    .catch((reason) => {
+      console.log(reason);
+    });
 };
