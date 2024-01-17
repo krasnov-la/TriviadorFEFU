@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Utils;
 
 namespace Services;
 
@@ -11,11 +12,10 @@ public class TokenService : ITokenService
 {
     private readonly string _jwtKey;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService()
     {
-        string? jwtKey = configuration.GetSection("JwtKey").Value;
-        if (jwtKey is null) throw new FileLoadException("File containing keys is not valid");
-        _jwtKey = jwtKey;
+        if (StaticDetails.JwtKey is null) throw new KeyNotFoundException("JwtKey env variable not set");
+        _jwtKey = StaticDetails.JwtKey;
     }
 
     public string GenerateAccessToken(IEnumerable<Claim> claims)
@@ -24,8 +24,8 @@ public class TokenService : ITokenService
         var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
         var tokenOptions = new JwtSecurityToken(
-            issuer: "https://localhost:7021",
-            audience: "https://localhost:7021",
+            issuer: "fefudor/api",
+            audience: "fefudor/client",
             claims: claims,
             expires: DateTime.Now.AddHours(3),
             signingCredentials: signinCredentials

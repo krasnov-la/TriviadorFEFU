@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Auth;
+using DataAccess.Repository;
 using Game;
 using Microsoft.AspNetCore.SignalR;
 namespace Game;
@@ -7,6 +8,13 @@ namespace Game;
 [AuthFilter("Default")]
 public sealed class GameHub : Hub<IGameClient>
 {
+    IUnitOfWork _unit;
+
+    public GameHub(IUnitOfWork unit)
+    {
+        _unit = unit;
+    }
+
     static Dictionary<string, List<string>> _lobbies = new();
     static Dictionary<Guid, GameState> _games = new();
     static Dictionary<string, string> _lastConnection = new();
@@ -151,9 +159,8 @@ public sealed class GameHub : Hub<IGameClient>
 
     async Task AskQuestion(Guid gameId)
     {
-        //generate random question guid
-        var guid = new Guid("6d8148f0-6b80-4fb4-99ab-7bc00935f5d2");
-
+        IEnumerable<Guid> questionIds = _unit.QuestionRepo.All().Select(q => q.Id);
+        var guid = questionIds.ElementAt(new Random(DateTime.Now.Microsecond).Next(questionIds.Count()));
         var group = _games[gameId].Players.Keys;
 
         foreach (var user in group) {
