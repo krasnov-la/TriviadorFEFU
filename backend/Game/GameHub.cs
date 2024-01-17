@@ -12,6 +12,8 @@ public sealed class GameHub : Hub<IGameClient>
     static Dictionary<string, string> _lastConnection = new();
     static Dictionary<string, Guid> _players = new();
     static Dictionary<string, int?> _expandChoises = new();
+    static Dictionary<Guid, Dictionary<string, Task<bool>>> _answers = new();
+    static Dictionary<Guid, Dictionary<string, bool>> _playersAnswers = new();
 
     public override async Task OnConnectedAsync()
     {
@@ -54,7 +56,9 @@ public sealed class GameHub : Hub<IGameClient>
             _players[login] = gameId;
         
         _games[gameId] = new GameState(_lobbies[owner]);
-        await Clients.Users(_lobbies[owner]).GameStart();
+        _answers[gameId] = new Dictionary<string, Task<bool>>();
+        _playersAnswers[gameId] = new Dictionary<string, bool>();
+        await Clients.Users(_lobbies[owner]).GameStart(gameId);
         StartTurn(gameId);
     }
 
@@ -140,21 +144,30 @@ public sealed class GameHub : Hub<IGameClient>
         StartTurn(gameId);
     }
 
+    public async Task AnswerQuestion(Guid gameId, string login, bool isCorrect) {
+        _playersAnswers[gameId][login] = isCorrect;
+        _answers[gameId][login].Start();
+    }
+
     async Task AskQuestion(Guid gameId)
     {
         //generate random question guid
-        var guid = Guid.Empty;
+        var guid = new Guid("6d8148f0-6b80-4fb4-99ab-7bc00935f5d2");
+
         var group = _games[gameId].Players.Keys;
 
-        Dictionary<string, Task<bool>> answers = new();
-        foreach (var user in group)
-            answers.Add(user, Clients.Client(_lastConnection[user]).AskQuestion(guid));
+        foreach (var user in group) {
+            _answers[gameId].Add(user, new Task<bool>(() => { 
+                return _playersAnswers[gameId][user];
+            }));
+            Clients.Client(_lastConnection[user]).AskQuestion(guid);
+        }
 
-        await Task.WhenAll(answers.Values);
+        await Task.WhenAll(_answers[gameId].Values);
 
         await Clients.Users(group).ExpandChoisesDrop();
 
-        foreach (var pair in answers)
+        foreach (var pair in _answers[gameId])
             if (pair.Value.Result)
             {
                 var choice = _expandChoises[pair.Key];

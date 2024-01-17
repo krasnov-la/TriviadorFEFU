@@ -2,11 +2,12 @@
 import { ref, reactive } from 'vue';
 import { establishConnection, startConnection } from 'src/SignalRUtils';
 import { useUserDataStore } from 'src/stores/user-data';
-import { useGameStore, GamePhases } from 'src/stores/game-store';
+import { useGameStore, GamePhases, PlayerColors } from 'src/stores/game-store';
 
 import QuestionPopup from 'src/components/QuestionPopup.vue';
+import { api } from 'src/boot/axios';
 
-const active = ref(false);
+const activeQuestion = ref(false);
 const avatarSrcPlayer1 = ref('https://cdn.quasar.dev/img/avatar2.jpg');
 const avatarSrcPlayer2 = ref('https://cdn.quasar.dev/img/avatar2.jpg');
 const ratingPlayer1 = ref(123);
@@ -16,6 +17,8 @@ const ans1 = ref('123');
 const ans2 = ref('123');
 const ans3 = ref('123');
 const ans4 = ref('123');
+const correctOfAnswers = reactive<{ [ansNum: number]: boolean }>({});
+const questionAnswered = ref<number | null>(null);
 
 const userDataStore = useUserDataStore();
 const gameStore = useGameStore();
@@ -109,10 +112,14 @@ const cellsStyle = [
     margin_right: -200,
   },
 ];
-const cellIsActive = reactive<{ [areaNum: string]: boolean }>({});
+
+const cellIsActive = reactive<{ [areaId: string]: boolean }>({});
+const cellOccupied = reactive<{ [areaId: string]: string | null }>({});
 for (let i = 0; i < 20; i++) {
   cellIsActive[i] = false;
+  cellOccupied[i] = null;
 }
+let colorCounter = 1;
 
 const myInitTurnStarted = () => {
   showAllAreas();
@@ -138,6 +145,7 @@ connection.on('StartTurnInit', (login) => {
   gameStore.playerTurnLogin = login;
   gameStore.gamePhase = GamePhases.Init;
   gameStore.playersAreas[login] = [];
+  gameStore.playersColors[login] = PlayerColors.Red + colorCounter++;
   gameStore.updateLS();
 
   if (login == userDataStore.login) {
@@ -170,8 +178,10 @@ connection.on('EndTurn', () => {
 connection.on('Obtain', (login: string, areaId: number) => {
   gameStore.playersAreas[login].push(areaId);
   gameStore.updateLS();
+  cellOccupied[areaId - 1] = login;
+  activeQuestion.value = false;
 
-  console.log('Obtain');
+  console.log(`Obtain: ${login} - ${areaId}`);
 });
 
 connection.on('WrongOrderMove', (expected, actual) => {
@@ -181,6 +191,55 @@ connection.on('WrongOrderMove', (expected, actual) => {
 connection.on('ExpandChoise', (login, areaId) => {
   console.log(`ExpandChoise: ${login} - ${areaId}`);
 });
+
+connection.on('AskQuestion', async (guid) => {
+  getQuestionData(guid);
+  activeQuestion.value = true;
+
+  console.log(`AskQuestion: ${guid}`);
+});
+
+interface IOption {
+  id: string;
+  text: string;
+  correct: boolean;
+  questionId: string;
+}
+
+interface IQuestion {
+  id: string;
+  text: string;
+  options: IOption[];
+}
+
+function getQuestionData(guid: string) {
+  api
+    .get(`/Question/${guid}`)
+    .then((response) => {
+      const questionData = response.data as IQuestion;
+      question.value = questionData.text;
+      ans1.value = questionData.options[0].text;
+      ans2.value = questionData.options[1].text;
+      ans3.value = questionData.options[2].text;
+      ans4.value = questionData.options[3].text;
+      correctOfAnswers[0] = questionData.options[0].correct;
+      correctOfAnswers[1] = questionData.options[1].correct;
+      correctOfAnswers[2] = questionData.options[2].correct;
+      correctOfAnswers[3] = questionData.options[3].correct;
+    })
+    .catch((reason) => {
+      console.log(reason);
+    });
+}
+
+function askQuestion(result: boolean) {
+  connection.send(
+    'AnswerQuestion',
+    String(gameStore.gameId),
+    String(userDataStore.login),
+    Boolean(result)
+  );
+}
 
 function showMyAreas() {
   if (userDataStore.login == null) throw new Error('User login is null');
@@ -219,6 +278,23 @@ function selectArea(areaId: string) {
       break;
   }
 }
+
+function returnFlag(areaId: number) {
+  if (cellOccupied[areaId] == null) {
+    return '/f_white.png';
+  } else {
+    switch (gameStore.playersColors[cellOccupied[areaId] as string]) {
+      case PlayerColors.Red:
+        return '/f_red.png';
+      case PlayerColors.Blue:
+        return '/f_blue.png';
+      case PlayerColors.Yellow:
+        return '/f_yellow.png';
+      case PlayerColors.Green:
+        return '/f_green.png';
+    }
+  }
+}
 </script>
 
 <template>
@@ -231,7 +307,7 @@ function selectArea(areaId: string) {
     <q-img
       v-for="i in 20"
       :key="i"
-      src="/public/f_white.png"
+      :src="returnFlag(i - 1)"
       width="40px"
       :style="{
         opacity: cellIsActive[0] ? 1 : 0.45,
@@ -246,53 +322,14 @@ function selectArea(areaId: string) {
         }
       "
     ></q-img>
-  </q-page>
-</template>
-
-<!-- <template>
-  <q-page class="row justify-around items-center">
-    <q-card fit style="width: 80%; height: 600px" class="column">
-      <q-table
-        flat
-        bordered
-        grid
-        title="KARTA DVFU"
-        :rows="rows"
-        :columns="columns"
-        row-key="name"
-        hide-header
-      >
-        <template v-slot:item="props">
-          <div
-            v-for="col in props.cols.filter((col) => col.name !== 'desc')"
-            class="q-pa-xs col-xs-12 col-sm-6 col-md-4 col-lg-3 grid-style-transition"
-            :key="col.name"
-            @click="selectArea(col.value)"
-            :ref="
-              (element) => {
-                setCell(element as Element, col.value);
-              }
-            "
-            :style="{ color: cellIsActive[col.value] ? 'inherit' : 'red' }"
-          >
-            <q-card bordered flat>
-              <q-list dense>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label>{{ col.label }}</q-item-label>
-                  </q-item-section>
-                  <q-item-section side>
-                    <q-item-label caption>{{ col.value }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-card>
-          </div>
-        </template>
-      </q-table>
-    </q-card>
     <QuestionPopup
-      v-model:active="active"
+      @answer="
+        (ansId) => {
+          askQuestion(correctOfAnswers[ansId]);
+          console.log(ansId);
+        }
+      "
+      v-model:active="activeQuestion"
       :avatarSrcPlayer1="avatarSrcPlayer1"
       :avatarSrcPlayer2="avatarSrcPlayer2"
       :ratingPlayer1="ratingPlayer1"
@@ -304,4 +341,4 @@ function selectArea(areaId: string) {
       :ans4="ans4"
     />
   </q-page>
-</template> -->
+</template>

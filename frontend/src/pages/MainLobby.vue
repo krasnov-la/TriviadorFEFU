@@ -2,7 +2,7 @@
 import { ref, reactive, computed } from 'vue';
 import { QTableProps } from 'quasar';
 import { useUserDataStore } from 'src/stores/user-data';
-import { GamePhases, useGameStore } from 'src/stores/game-store';
+import { GamePhases, useGameStore, PlayerColors } from 'src/stores/game-store';
 import { Router } from 'src/router';
 import axios, { api } from 'src/boot/axios';
 import {
@@ -109,10 +109,12 @@ connection.on('LobbyNotFound', () => {
   console.log('LobbyNotFound');
 });
 
-connection.on('GameStart', () => {
+connection.on('GameStart', (gameGuid: string) => {
   gameStore.inGame = true;
   gameStore.playersAreas = {};
   gameStore.gamePhase = GamePhases.Init;
+  gameStore.gameId = gameGuid;
+  gameStore.updateLS();
 
   console.log('GameStart');
 });
@@ -120,6 +122,7 @@ connection.on('GameStart', () => {
 connection.on('StartTurnInit', (login) => {
   gameStore.playerTurnLogin = login;
   gameStore.playersAreas[login] = [];
+  gameStore.playersColors[login] = PlayerColors.Red;
   gameStore.updateLS();
 
   stopConnection(connection);
