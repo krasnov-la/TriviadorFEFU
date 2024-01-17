@@ -1,0 +1,1 @@
+dotnet ef migrations script 0 -p ..\backend\backend.csproj -o ./database_up.sql

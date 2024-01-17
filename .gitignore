@@ -488,4 +488,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Secret keys 
-secret.json
+*.env
+
+# Scripts
+*.sql
