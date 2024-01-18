@@ -19,7 +19,7 @@ public sealed class GameHub : Hub<IGameClient>
     static Dictionary<Guid, GameState> _games = new();
     static Dictionary<string, Guid> _players = new();
     static Dictionary<string, int?> _expandChoises = new();
-
+    static Dictionary<Guid, Dictionary<string, bool>> _answers = new();
     public async Task CreateLobby()
     {
         var owner = Context.UserIdentifier;
@@ -38,12 +38,13 @@ public sealed class GameHub : Hub<IGameClient>
             return;
         }
 
-        string caller = Context.UserIdentifier;
-        _lobbies[owner].Add(caller);
-        await Clients.Users(_lobbies[owner]).UpdateLobby(caller);
+        string callerLogin = Context.UserIdentifier;
+        _lobbies[owner].Add(callerLogin);
+        await Clients.Users(_lobbies[owner]).UpdateLobby(callerLogin);
         await Clients.Caller.JoinLobby(_lobbies[owner]);
 
-        if (_lobbies[owner].Count == 3)
+        //TODO: change to 4
+        if (_lobbies[owner].Count == 2)
             await GameStart(owner);
     }
 
@@ -54,7 +55,7 @@ public sealed class GameHub : Hub<IGameClient>
             _players[login] = gameId;
         
         _games[gameId] = new GameState(_lobbies[owner]);
-        await Clients.Users(_lobbies[owner]).GameStart();
+        await Clients.Users(_lobbies[owner]).GameStart(gameId);
         StartTurn(gameId);
     }
 
@@ -62,9 +63,11 @@ public sealed class GameHub : Hub<IGameClient>
     {
         var game = _games[gameId];
         game.Turn++;
-        var user = game.Order[game.Turn % 9];
+        //TODO: change to 9
+        var user = game.Order[game.Turn % 4];
         game.ExpectedPlayer = user;
-        if (game.Turn == 3) game.Phase++;
+        //TODO: change to 3;
+        if (game.Turn == 2) game.Phase++;
 
         if (20 - game.Players.Select(p => p.Value.Areas.Count()).Sum() < 3)
         {
@@ -133,28 +136,41 @@ public sealed class GameHub : Hub<IGameClient>
         _expandChoises[user] = areaId;
         await Clients.Users(game.Players.Keys).ExpandChoise(user, areaId);
         if (_expandChoises.Count == game.Players.Count)
+        {
             await AskQuestion(gameId);
-        
+            return;
+        }
+             
         StartTurn(gameId);
     }
 
     async Task AskQuestion(Guid gameId)
     {
-
         IEnumerable<Guid> questionIds = _unit.QuestionRepo.All().Select(q => q.Id);
         var guid = questionIds.ElementAt(new Random(DateTime.Now.Microsecond).Next(questionIds.Count()));
         var group = _games[gameId].Players.Keys;
 
-        Dictionary<string, Task<bool>> answers = new();
-        foreach (var user in group)
-            answers.Add(user, Clients.User(user).AskQuestion(guid));
+        _answers[gameId] = new();
 
-        await Task.WhenAll(answers.Values);
+        await Clients.Users(group).AskQuestion(guid);
+    }
+
+    public async Task AnswerQuestion(bool is_correct)
+    {
+        var user = Context.UserIdentifier;
+        var gameId = _players[user];
+        var group = _games[gameId].Players.Keys;
+
+        if (!_answers.ContainsKey(gameId)) return;
+        if (_answers[gameId].ContainsKey(user)) return;
+        _answers[gameId][user] = is_correct;
+        //TODO: usercount
+        if (_answers[gameId].Count() != 2) return;
 
         await Clients.Users(group).ExpandChoisesDrop();
 
-        foreach (var pair in answers)
-            if (pair.Value.Result)
+        foreach (var pair in _answers[gameId])
+            if (pair.Value)
             {
                 var choice = _expandChoises[pair.Key];
                 var player = _games[gameId].Players[pair.Key];
@@ -167,7 +183,10 @@ public sealed class GameHub : Hub<IGameClient>
                 await Clients.Users(group).Obtain(pair.Key, (int)choice);
             }
         
+        _answers.Remove(gameId);
         _expandChoises.Clear();
+
+        StartTurn(gameId);
     }
 
     void AddScore(PlayerState player, int add)

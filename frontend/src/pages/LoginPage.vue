@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { api } from 'src/boot/axios';
-import { useQuasar } from 'quasar';
-import { LocalStorage } from 'quasar';
 import { Router } from 'src/router';
+
 import { useAuthStore } from 'src/stores/auth';
+import { useUserDataStore } from 'src/stores/user-data';
 
 const login = ref('');
 const password = ref('');
@@ -12,8 +12,6 @@ const password = ref('');
 const isPwd = ref(true);
 
 const errorMes = ref('');
-
-const $q = useQuasar();
 
 const usernameRules = [
   (val?: string) => (val && val.length > 0) || 'Please enter username',
@@ -43,6 +41,10 @@ const submitForm = () => {
       });
 
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+      const userDataStore = useUserDataStore();
+      userDataStore.getUserDataFromServer();
+
       if (response.status === 200) {
         Router.push('/lobby');
       }

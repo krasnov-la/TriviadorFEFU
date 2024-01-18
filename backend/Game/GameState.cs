@@ -28,10 +28,12 @@ public class GameState
 
     private void FillOrder(List<string> logins)
     {
-        for (int i = 0; i < 3; i++)
+        //TODO: change to 2 (4 mb)
+        for (int i = 0; i < 2; i++)
             Order = Order.Concat(
                 logins.Select((login, index) 
-                    => logins[(index + i) % 3] 
+                //TODO: change to 3
+                    => logins[(index + i) % 2] 
                 )
             ).ToList();
     }
