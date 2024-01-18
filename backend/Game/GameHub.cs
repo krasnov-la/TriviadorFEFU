@@ -136,8 +136,11 @@ public sealed class GameHub : Hub<IGameClient>
         _expandChoises[user] = areaId;
         await Clients.Users(game.Players.Keys).ExpandChoise(user, areaId);
         if (_expandChoises.Count == game.Players.Count)
+        {
             await AskQuestion(gameId);
-        
+            return;
+        }
+             
         StartTurn(gameId);
     }
 
@@ -182,6 +185,8 @@ public sealed class GameHub : Hub<IGameClient>
         
         _answers.Remove(gameId);
         _expandChoises.Clear();
+
+        StartTurn(gameId);
     }
 
     void AddScore(PlayerState player, int add)

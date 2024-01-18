@@ -186,7 +186,7 @@ const endGame = () => {
 <template>
   <q-page class="row justify-around items-center">
     <!--Table-->
-    <div style="height: 600px; width: 600px">
+    <!-- <div style="height: 600px; width: 600px">
       <q-table
         style="width: 600px; height: 600px; border-radius: 5%"
         separator="horizontal"
@@ -197,7 +197,7 @@ const endGame = () => {
         :rows-per-page-options="[10]"
         bordered
       />
-    </div>
+    </div> -->
     <!--Lobby-->
     <div
       class="column justify-center"
@@ -221,14 +221,14 @@ const endGame = () => {
           <div class="col-3">
             <q-img
               style="width: 100px; border-radius: 100px; height: 100px"
-              src="cat.jpg"
+              src="person.png"
             />
           </div>
           <span
             class="column justify-center"
-            style="font-size: 25px; text-decoration: none; color: black"
+            style="font-size: 35px; text-decoration: none; color: black"
           >
-            Profile
+            {{ userDataStore.login }}
           </span>
         </div>
       </div>
@@ -246,7 +246,7 @@ const endGame = () => {
           <div class="col-2 q-ml-xs">
             <q-img
               style="width: 50px; border-radius: 100px; height: 50px"
-              src="cat.jpg"
+              src="person.png"
             />
           </div>
           <div class="column justify-center" href="#" style="font-size: 20px">
@@ -306,7 +306,6 @@ const endGame = () => {
       </div>
     </div>
   </q-page>
-  <ProfilePopup v-model:active="profileActive" @close="closeProfile" />
   <q-dialog
     :model-value="inputIdActive"
     @hide="

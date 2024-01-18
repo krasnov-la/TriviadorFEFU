@@ -161,6 +161,7 @@ connection.on('StartTurnExpand', (login) => {
   gameStore.playerTurnLogin = login;
   gameStore.gamePhase = GamePhases.Expand;
   gameStore.updateLS();
+  activeQuestion.value = false;
 
   if (login == userDataStore.login) {
     myExpandTurnStarted();
@@ -199,6 +200,10 @@ connection.on('AskQuestion', async (guid) => {
   console.log(`AskQuestion: ${guid}`);
 });
 
+connection.on('ExpandChoisesDrop', () => {
+  console.log('ExpandChoisesDrop');
+});
+
 interface IOption {
   id: string;
   text: string;
@@ -233,12 +238,14 @@ function getQuestionData(guid: string) {
 }
 
 function askQuestion(result: boolean) {
-  connection.send(
-    'AnswerQuestion',
-    String(gameStore.gameId),
-    String(userDataStore.login),
-    Boolean(result)
-  );
+  connection
+    .send('AnswerQuestion', Boolean(result))
+    .then((val) => {
+      console.log(val);
+    })
+    .catch((reason) => {
+      console.log(reason);
+    });
 }
 
 function showMyAreas() {

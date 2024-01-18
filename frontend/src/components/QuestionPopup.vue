@@ -17,33 +17,20 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'answer', ansId: number): void;
 }>();
-
-const timerCounter = ref<number>(5);
 </script>
 
 <template>
   <q-dialog :model-value="active" persistent>
     <q-card class="column justify-center" style="width: 700px; height: 400px">
-      <q-card-section class="row text-center justify-center items-center row-1">
-        <span class="col-3">
-          <q-avatar style="height: 50px; width: 50px">
-            <img :src="avatarSrcPlayer1" />
-          </q-avatar>
-        </span>
-        <span class="col-6">{{ ratingPlayer1 }} / {{ ratingPlayer2 }}</span>
-        <span class="col-3">
-          <q-avatar style="height: 50px; width: 50px">
-            <img :src="avatarSrcPlayer2" />
-          </q-avatar>
-        </span>
+      <q-card-section
+        class="row text-center justify-center row-5"
+        style="font-size: 20px"
+      >
+        <p style="width: 500px; word-wrap: break-word; white-space: pre-wrap">
+          {{ question }}
+        </p>
       </q-card-section>
-      <q-card-section class="row text-center justify-center row-1">
-        <span>{{ timerCounter }}</span>
-      </q-card-section>
-      <q-card-section class="row text-center justify-center row-2">
-        <span>{{ question }}</span>
-      </q-card-section>
-      <q-card-section class="row text-center justify-center row-6">
+      <q-card-section class="row text-center justify-center row-5">
         <div class="column">
           <div class="row col-5">
             <q-btn
