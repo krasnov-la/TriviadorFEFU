@@ -20,7 +20,6 @@ public sealed class GameHub : Hub<IGameClient>
     static Dictionary<string, Guid> _players = new();
     static Dictionary<string, int?> _expandChoises = new();
     static Dictionary<Guid, Dictionary<string, bool>> _answers = new();
-    static Dictionary<Guid, Dictionary<string, bool>> _playersAnswers = new();
     public async Task CreateLobby()
     {
         var owner = Context.UserIdentifier;
@@ -56,7 +55,6 @@ public sealed class GameHub : Hub<IGameClient>
             _players[login] = gameId;
         
         _games[gameId] = new GameState(_lobbies[owner]);
-        _playersAnswers[gameId] = new Dictionary<string, bool>();
         await Clients.Users(_lobbies[owner]).GameStart(gameId);
         StartTurn(gameId);
     }
