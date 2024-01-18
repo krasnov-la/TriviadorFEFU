@@ -56,7 +56,6 @@ public sealed class GameHub : Hub<IGameClient>
             _players[login] = gameId;
         
         _games[gameId] = new GameState(_lobbies[owner]);
-        _answers[gameId] = new Dictionary<string, Task<bool>>();
         _playersAnswers[gameId] = new Dictionary<string, bool>();
         await Clients.Users(_lobbies[owner]).GameStart(gameId);
         StartTurn(gameId);
