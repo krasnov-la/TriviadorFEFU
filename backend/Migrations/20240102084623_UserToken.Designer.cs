@@ -3,6 +3,7 @@ using System;
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240102084623_UserToken")]
+    partial class UserToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,19 +48,6 @@ namespace backend.Migrations
                     b.ToTable("Answers");
                 });
 
-            modelBuilder.Entity("DataAccess.Models.FriendRelation", b =>
-                {
-                    b.Property<Guid>("PersonId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("FriendId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("PersonId", "FriendId");
-
-                    b.ToTable("Friends");
-                });
-
             modelBuilder.Entity("DataAccess.Models.Question", b =>
                 {
                     b.Property<Guid>("Id")
@@ -79,13 +69,13 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("Admin")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-
-                    b.Property<string>("ImgPath")
-                        .HasColumnType("text");
 
                     b.Property<string>("Login")
                         .IsRequired()
@@ -104,10 +94,6 @@ namespace backend.Migrations
 
                     b.Property<DateTime?>("RefreshTokenExp")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("School")
                         .HasMaxLength(256)

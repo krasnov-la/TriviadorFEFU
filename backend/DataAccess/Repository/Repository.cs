@@ -1,6 +1,7 @@
 ﻿using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using DataAccess.Models;
 
 namespace DataAccess.Repository;
 public class Repository<T> : IRepository<T> where T : class
@@ -8,6 +9,9 @@ public class Repository<T> : IRepository<T> where T : class
     private readonly DbSet<T> _dbSet;
     public Repository(AppDbContext db)
     {
+        // Type typeT = typeof(T);
+        // if(typeT == typeof(Question)) db.IncludeQuestionRelations();
+        // db.IncludeQuestionRelations();
         _dbSet = db.Set<T>();
     }
     public void Add(T entity)

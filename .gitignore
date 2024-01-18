@@ -3,6 +3,17 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Manually...
+# ...added api confing for axios.ts
+apiConfig.json
+# ...added ignore for .vscode
+.vscode
+# ...added ignore for VS solutions file
+TriviadorFEFU.sln
+
+#pycharm
+.idea
+
 # User-specific files
 *.rsuser
 *.suo
@@ -476,5 +487,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# Db
-dbconfig.json
+# Secret keys 
+*.env
+secret.json
+
+# Scripts
+*.sql
