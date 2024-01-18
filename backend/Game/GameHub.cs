@@ -17,18 +17,10 @@ public sealed class GameHub : Hub<IGameClient>
 
     static Dictionary<string, List<string>> _lobbies = new();
     static Dictionary<Guid, GameState> _games = new();
-    static Dictionary<string, string> _lastConnection = new();
     static Dictionary<string, Guid> _players = new();
     static Dictionary<string, int?> _expandChoises = new();
-    static Dictionary<Guid, Dictionary<string, Task<bool>>> _answers = new();
+    static Dictionary<Guid, Dictionary<string, bool>> _answers = new();
     static Dictionary<Guid, Dictionary<string, bool>> _playersAnswers = new();
-
-    public override async Task OnConnectedAsync()
-    {
-        string user = Context.UserIdentifier;
-        _lastConnection[user] = Context.ConnectionId;
-        return;
-    }
     public async Task CreateLobby()
     {
         var owner = Context.UserIdentifier;
@@ -152,30 +144,33 @@ public sealed class GameHub : Hub<IGameClient>
         StartTurn(gameId);
     }
 
-    public async Task AnswerQuestion(Guid gameId, string login, bool isCorrect) {
-        _playersAnswers[gameId][login] = isCorrect;
-        _answers[gameId][login].Start();
-    }
-
     async Task AskQuestion(Guid gameId)
     {
         IEnumerable<Guid> questionIds = _unit.QuestionRepo.All().Select(q => q.Id);
         var guid = questionIds.ElementAt(new Random(DateTime.Now.Microsecond).Next(questionIds.Count()));
         var group = _games[gameId].Players.Keys;
 
-        foreach (var user in group) {
-            _answers[gameId].Add(user, new Task<bool>(() => { 
-                return _playersAnswers[gameId][user];
-            }));
-            Clients.Client(_lastConnection[user]).AskQuestion(guid);
-        }
+        _answers[gameId] = new();
 
-        await Task.WhenAll(_answers[gameId].Values);
+        await Clients.Users(group).AskQuestion(guid);
+    }
+
+    public async Task AnswerQuestion(bool is_correct)
+    {
+        var user = Context.UserIdentifier;
+        var gameId = _players[user];
+        var group = _games[gameId].Players.Keys;
+
+        if (!_answers.ContainsKey(gameId)) return;
+        if (_answers[gameId].ContainsKey(user)) return;
+        _answers[gameId][user] = is_correct;
+        //TODO: usercount
+        if (_answers[gameId].Count() != 2) return;
 
         await Clients.Users(group).ExpandChoisesDrop();
 
         foreach (var pair in _answers[gameId])
-            if (pair.Value.Result)
+            if (pair.Value)
             {
                 var choice = _expandChoises[pair.Key];
                 var player = _games[gameId].Players[pair.Key];
@@ -188,6 +183,7 @@ public sealed class GameHub : Hub<IGameClient>
                 await Clients.Users(group).Obtain(pair.Key, (int)choice);
             }
         
+        _answers.Remove(gameId);
         _expandChoises.Clear();
     }
 
