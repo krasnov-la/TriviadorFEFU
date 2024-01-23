@@ -129,8 +129,8 @@ connection.on('GameStart', (gameGuid: string) => {
 
 connection.on('StartTurnInit', (login: string) => {
   gameStore.playerTurnLogin = login;
-  gameStore.playersAreas[login] = [];
-  gameStore.playersColors[login] = PlayerColors.Red;
+  gameStore.initPlayer(login);
+  gameStore.setPlayerColor(login, PlayerColors.Red);
   gameStore.updateLS();
 
   stopConnection(connection);

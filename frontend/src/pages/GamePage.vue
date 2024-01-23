@@ -6,6 +6,7 @@ import { useGameStore, GamePhases, PlayerColors } from 'src/stores/game-store';
 
 import QuestionPopup from 'src/components/QuestionPopup.vue';
 import { api } from 'src/boot/axios';
+import { formToJSON } from 'axios';
 
 const activeQuestion = ref(false);
 const avatarSrcPlayer1 = ref('https://cdn.quasar.dev/img/avatar2.jpg');
@@ -18,7 +19,6 @@ const ans2 = ref('123');
 const ans3 = ref('123');
 const ans4 = ref('123');
 const correctOfAnswers = reactive<{ [ansNum: number]: boolean }>({});
-const questionAnswered = ref<number | null>(null);
 
 const userDataStore = useUserDataStore();
 const gameStore = useGameStore();
@@ -113,12 +113,6 @@ const cellsStyle = [
   },
 ];
 
-const cellIsActive = reactive<{ [areaId: string]: boolean }>({});
-const cellOccupied = reactive<{ [areaId: string]: string | null }>({});
-for (let i = 0; i < 20; i++) {
-  cellIsActive[i] = false;
-  cellOccupied[i] = null;
-}
 let colorCounter = 1;
 
 const myInitTurnStarted = () => {
@@ -130,7 +124,7 @@ const myInitTurnEnded = () => {
 };
 
 const myExpandTurnStarted = () => {
-  showMyAreas();
+  showAllAreas();
 };
 
 const myExpandTurnEnded = () => {
@@ -144,8 +138,8 @@ if (gameStore.playerTurnLogin == userDataStore.login) {
 connection.on('StartTurnInit', (login) => {
   gameStore.playerTurnLogin = login;
   gameStore.gamePhase = GamePhases.Init;
-  gameStore.playersAreas[login] = [];
-  gameStore.playersColors[login] = PlayerColors.Red + colorCounter++;
+  gameStore.initPlayer(login);
+  gameStore.setPlayerColor(login, PlayerColors.Red + colorCounter++);
   gameStore.updateLS();
 
   if (login == userDataStore.login) {
@@ -157,7 +151,7 @@ connection.on('StartTurnInit', (login) => {
   console.log(`StartTurnInit: ${login}`);
 });
 
-connection.on('StartTurnExpand', (login) => {
+connection.on('StartTurnExpand', async (login) => {
   gameStore.playerTurnLogin = login;
   gameStore.gamePhase = GamePhases.Expand;
   gameStore.updateLS();
@@ -169,6 +163,11 @@ connection.on('StartTurnExpand', (login) => {
     myExpandTurnEnded();
   }
 
+  for (let a in Object.values(gameStore.expandChoiseAreaIds)) {
+    const val = Number(gameStore.expandChoiseAreaIds[a]) - 1;
+    gameStore.areas[val.toString()].isActive = false;
+  }
+
   console.log(`StartTurnExpand: ${login}`);
 });
 
@@ -177,9 +176,8 @@ connection.on('EndTurn', () => {
 });
 
 connection.on('Obtain', (login: string, areaId: number) => {
-  gameStore.playersAreas[login].push(areaId);
+  gameStore.setPlayerArea(login, (areaId - 1).toString());
   gameStore.updateLS();
-  cellOccupied[areaId - 1] = login;
   activeQuestion.value = false;
 
   console.log(`Obtain: ${login} - ${areaId}`);
@@ -190,6 +188,9 @@ connection.on('WrongOrderMove', (expected, actual) => {
 });
 
 connection.on('ExpandChoise', (login, areaId) => {
+  gameStore.expandChoiseAreaIds.push(areaId);
+  gameStore.updateLS();
+
   console.log(`ExpandChoise: ${login} - ${areaId}`);
 });
 
@@ -201,6 +202,7 @@ connection.on('AskQuestion', async (guid) => {
 });
 
 connection.on('ExpandChoisesDrop', () => {
+  gameStore.clearExpandChoises();
   console.log('ExpandChoisesDrop');
 });
 
@@ -251,27 +253,34 @@ function askQuestion(result: boolean) {
 function showMyAreas() {
   if (userDataStore.login == null) throw new Error('User login is null');
   const myAreas = gameStore.playersAreas[userDataStore.login];
-  for (let area in myAreas) {
-    cellIsActive[area] = true;
+  for (const area in myAreas) {
+    gameStore.setAreaActivity(true, area);
+  }
+}
+
+function showAllAcceptableAreas() {
+  for (let areaId in gameStore.areas) {
+    if (!gameStore.expandChoiseAreaIds.includes(areaId)) {
+      gameStore.setAreaActivity(true, areaId);
+    }
   }
 }
 
 function showAllAreas() {
-  for (let key in cellIsActive) {
-    cellIsActive[key] = true;
-    console.log(key);
-    console.log(cellIsActive[key]);
+  for (let areaId in gameStore.areas) {
+    gameStore.setAreaActivity(true, areaId);
   }
 }
 
 function hideAllAreas() {
-  for (let key in cellIsActive) {
-    cellIsActive[key] = false;
+  for (let areaId in gameStore.areas) {
+    gameStore.setAreaActivity(false, areaId);
   }
 }
 
 function selectArea(areaId: string) {
   if (gameStore.playerTurnLogin != userDataStore.login) return;
+  if (!gameStore.areas[areaId].isActive) return;
   switch (gameStore.gamePhase) {
     case GamePhases.Init:
       connection.send('ChooseInit', Number(areaId));
@@ -287,10 +296,12 @@ function selectArea(areaId: string) {
 }
 
 function returnFlag(areaId: number) {
-  if (cellOccupied[areaId] == null) {
+  if (gameStore.areas[areaId].ownerLogin == null) {
     return '/f_white.png';
   } else {
-    switch (gameStore.playersColors[cellOccupied[areaId] as string]) {
+    switch (
+      gameStore.playersColors[gameStore.areas[areaId].ownerLogin as string]
+    ) {
       case PlayerColors.Red:
         return '/f_red.png';
       case PlayerColors.Blue:
@@ -317,7 +328,11 @@ function returnFlag(areaId: number) {
       :src="returnFlag(i - 1)"
       width="40px"
       :style="{
-        opacity: cellIsActive[0] ? 1 : 0.45,
+        opacity:
+          gameStore.areas[i - 1] == undefined ||
+          !gameStore.areas[i - 1].isActive
+            ? 0.45
+            : 1,
         position: 'absolute',
         top: `${cellsStyle[i - 1].top}px`,
         'margin-right': `${cellsStyle[i - 1].margin_right}px`,

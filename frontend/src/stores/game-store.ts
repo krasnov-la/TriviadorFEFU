@@ -3,6 +3,8 @@ import { defineStore } from 'pinia';
 
 import * as LSPath from 'src/LocalStoragePaths';
 
+const areasCount = 20;
+
 export enum GamePhases {
   Init,
   Expand,
@@ -15,13 +17,21 @@ export enum PlayerColors {
   Green,
 }
 
+interface IArea {
+  ownerLogin: string | null;
+  isActive: boolean;
+  shaded: boolean;
+}
+
 interface IGameStore {
   inGame: boolean;
   gamePhase: GamePhases;
   playerTurnLogin: string | null;
-  playersAreas: { [login: string]: Array<number> };
-  playersColors: { [login: string]: PlayerColors };
+  playersAreas: { [login: string]: Array<string> };
+  playersColors: { [login: string]: PlayerColors | null };
+  areas: { [areaId: string]: IArea };
   gameId: string | null;
+  expandChoiseAreaIds: string[];
 }
 
 function GetFromLS(): IGameStore {
@@ -30,7 +40,9 @@ function GetFromLS(): IGameStore {
   const playerTurnLogin = LocalStorage.getItem(LSPath.playerTurnLogin);
   const playersAreas = LocalStorage.getItem(LSPath.playersAreas);
   const playersColors = LocalStorage.getItem(LSPath.playersColors);
+  const areas = LocalStorage.getItem(LSPath.areas);
   const gameId = LocalStorage.getItem(LSPath.gameId);
+  const expandChoiseAreaIds = LocalStorage.getItem(LSPath.expandChoiseAreaIds);
 
   if (
     inGame == null ||
@@ -38,27 +50,43 @@ function GetFromLS(): IGameStore {
     playerTurnLogin == null ||
     playersAreas == null ||
     playersColors == null ||
-    gameId == null
+    areas == null ||
+    gameId == null ||
+    expandChoiseAreaIds == null
   ) {
-    UpdateLS({
+    const obj: IGameStore = {
       inGame: false,
       gamePhase: GamePhases.Init,
       playerTurnLogin: null,
       playersAreas: {},
       playersColors: {},
+      areas: {},
       gameId: null,
-    });
+      expandChoiseAreaIds: [],
+    };
+
+    for (let i = 0; i < areasCount; i++) {
+      obj.areas[i.toString()] = {
+        ownerLogin: null,
+        isActive: false,
+        shaded: false,
+      };
+    }
+
+    UpdateLS(obj);
   }
 
   return {
     inGame: inGame?.valueOf() as boolean,
     gamePhase: gamePhase?.valueOf() as GamePhases,
     playerTurnLogin: playerTurnLogin?.valueOf() as string,
-    playersAreas: playersAreas?.valueOf() as { [login: string]: Array<number> },
+    playersAreas: playersAreas?.valueOf() as { [login: string]: Array<string> },
     playersColors: playersColors?.valueOf() as {
       [login: string]: PlayerColors;
     },
+    areas: areas?.valueOf() as { [areaId: string]: IArea },
     gameId: gameId?.valueOf() as string,
+    expandChoiseAreaIds: expandChoiseAreaIds?.valueOf() as string[],
   };
 }
 
@@ -68,7 +96,9 @@ function UpdateLS(gameStore: IGameStore): void {
   LocalStorage.set(LSPath.playerTurnLogin, gameStore.playerTurnLogin);
   LocalStorage.set(LSPath.playersAreas, gameStore.playersAreas);
   LocalStorage.set(LSPath.playersColors, gameStore.playersColors);
+  LocalStorage.set(LSPath.areas, gameStore.areas);
   LocalStorage.set(LSPath.gameId, gameStore.gameId);
+  LocalStorage.set(LSPath.expandChoiseAreaIds, gameStore.expandChoiseAreaIds);
 }
 
 export const useGameStore = defineStore('game-store', {
@@ -99,9 +129,31 @@ export const useGameStore = defineStore('game-store', {
 
       const chosenColor = difference[getRandomInt(difference.length)];
 
-      this.playersColors[login] = chosenColor;
+      this.setPlayerColor(login, chosenColor);
+    },
+
+    setPlayerColor(login: string, color: PlayerColors) {
+      this.playersColors[login] = color;
 
       UpdateLS(this.$state);
+    },
+
+    setPlayerArea(login: string, areaId: string) {
+      this.playersAreas[login].push(areaId);
+      this.areas[areaId].ownerLogin = login;
+
+      UpdateLS(this.$state);
+    },
+
+    setAreaActivity(activity: boolean, areaId: string) {
+      this.areas[areaId].isActive = activity;
+
+      UpdateLS(this.$state);
+    },
+
+    initPlayer(login: string) {
+      this.playersAreas[login] = [];
+      this.playersColors[login] = null;
     },
 
     clear(): void {
@@ -110,7 +162,23 @@ export const useGameStore = defineStore('game-store', {
       this.playerTurnLogin = null;
       this.playersAreas = {};
       this.playersColors = {};
+      this.areas = {};
+      for (let i = 0; i < areasCount; i++) {
+        this.areas[i] = {
+          ownerLogin: null,
+          isActive: false,
+          shaded: false,
+        };
+      }
       this.gameId = null;
+      this.expandChoiseAreaIds = [];
+
+      UpdateLS(this.$state);
+    },
+
+    clearExpandChoises(): void {
+      this.expandChoiseAreaIds = [];
+
       UpdateLS(this.$state);
     },
   },

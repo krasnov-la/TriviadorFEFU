@@ -10,4 +10,6 @@ export const gamePhase = 'gamePhaseLS';
 export const playerTurnLogin = 'playerTurnLoginLS';
 export const playersAreas = 'playersAreasLS';
 export const playersColors = 'playersColorsLS';
+export const areas = 'areasLS';
 export const gameId = 'gameIdLS';
+export const expandChoiseAreaIds = 'expandChoiseAreaIdsLS';
