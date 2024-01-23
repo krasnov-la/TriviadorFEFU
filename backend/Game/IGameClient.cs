@@ -14,6 +14,7 @@ public interface IGameClient
     public Task ExpandChoisesDrop();
     public Task EndTurn();
     public Task AskQuestion(Guid questionId);
+    public Task AddScore(string login, int amount);
     public Task WrongOrderMove(string expected, string actual);
     public Task GameEnd();
 }
