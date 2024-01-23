@@ -194,6 +194,6 @@ public sealed class GameHub : Hub<IGameClient>
     {
         lock (player)
             player.Score += add;
-        await Clients.User(player.Login).AddScore(player.Login, add);
+        await Clients.User(player.Login).AddScore(player.Login, player.Score);
     }
 }
