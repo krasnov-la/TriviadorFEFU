@@ -176,10 +176,11 @@ public sealed class GameHub : Hub<IGameClient>
                 var player = _games[gameId].Players[pair.Key];
                 if (choice is null)
                 {
-                    AddScore(player, 100);
+                    await AddScore(player, 100);
                     return;
                 }
-                AddScore(player, 200);
+                await AddScore(player, 200);
+                player.Areas.Append((int)choice);
                 await Clients.Users(group).Obtain(pair.Key, (int)choice);
             }
         
@@ -189,9 +190,10 @@ public sealed class GameHub : Hub<IGameClient>
         StartTurn(gameId);
     }
 
-    void AddScore(PlayerState player, int add)
+    async Task AddScore(PlayerState player, int add)
     {
         lock (player)
             player.Score += add;
+        await Clients.User(player.Login).AddScore(player.Login, player.Score);
     }
 }
