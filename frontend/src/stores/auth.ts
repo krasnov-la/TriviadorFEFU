@@ -73,6 +73,12 @@ export const useAuthStore = defineStore('auth', {
       this.refreshToken = tokens.refreshToken;
       //updateLocalStorage(); - nado ili net?
     },
+
+    clear(): void {
+      this.accessToken = null;
+      this.refreshToken = null;
+      updateLocalStorage();
+    },
   },
 
   getters: {

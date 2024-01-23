@@ -69,6 +69,17 @@ const gameStore = useGameStore();
 const connection = establishConnection();
 startConnection(connection);
 
+function clearGameStorage(): void {
+  gameStore.clear();
+}
+
+function startGameStorage(gameGuid: string): void {
+  gameStore.inGame = true;
+  gameStore.gamePhase = GamePhases.Init;
+  gameStore.gameId = gameGuid;
+  gameStore.updateLS();
+}
+
 connection.on('LobbyTerminated', () => {
   hostRegimeActive.value = false;
 
@@ -110,16 +121,13 @@ connection.on('LobbyNotFound', () => {
 });
 
 connection.on('GameStart', (gameGuid: string) => {
-  gameStore.inGame = true;
-  gameStore.playersAreas = {};
-  gameStore.gamePhase = GamePhases.Init;
-  gameStore.gameId = gameGuid;
-  gameStore.updateLS();
+  clearGameStorage();
+  startGameStorage(gameGuid);
 
   console.log('GameStart');
 });
 
-connection.on('StartTurnInit', (login) => {
+connection.on('StartTurnInit', (login: string) => {
   gameStore.playerTurnLogin = login;
   gameStore.playersAreas[login] = [];
   gameStore.playersColors[login] = PlayerColors.Red;
@@ -131,12 +139,6 @@ connection.on('StartTurnInit', (login) => {
   }, 5000);
 
   console.log('StartTurnInit (ML): ' + String(login));
-});
-
-const sortedRows = computed(() => {
-  return state.rows
-    .slice()
-    .sort((b, a) => parseFloat(a.score) - parseFloat(b.score));
 });
 
 const createLobby = () => {

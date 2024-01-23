@@ -309,7 +309,7 @@ function returnFlag(areaId: number) {
     <q-img
       src="/public/game-map.png"
       width="80vh"
-      style="position: absolute"
+      style="position: absolute; user-select: none"
     ></q-img>
     <q-img
       v-for="i in 20"
@@ -321,6 +321,7 @@ function returnFlag(areaId: number) {
         position: 'absolute',
         top: `${cellsStyle[i - 1].top}px`,
         'margin-right': `${cellsStyle[i - 1].margin_right}px`,
+        'user-select': 'none',
       }"
       @click="selectArea(`${i}`)"
       :ref="
@@ -332,8 +333,8 @@ function returnFlag(areaId: number) {
     <QuestionPopup
       @answer="
         (ansId) => {
-          askQuestion(correctOfAnswers[ansId]);
-          console.log(ansId);
+          askQuestion(correctOfAnswers[ansId - 1]);
+          console.log(correctOfAnswers);
         }
       "
       v-model:active="activeQuestion"

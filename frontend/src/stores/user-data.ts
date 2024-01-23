@@ -77,5 +77,12 @@ export const useUserDataStore = defineStore('user-data', {
           console.log(error);
         });
     },
+
+    clear(): void {
+      this.login = null;
+      this.displayName = null;
+      this.school = null;
+      updateLocalStorage();
+    },
   },
 });

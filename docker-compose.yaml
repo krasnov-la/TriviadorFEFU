@@ -1,6 +1,5 @@
-version: '3'
+version: "3"
 services:
-
   front:
     build: ./frontend
     links:
@@ -9,11 +8,11 @@ services:
       - api
 
   api:
-    links: 
+    links:
       - postgres
     build: ./backend
     environment:
-      DbConnect: 'Server=postgres;port=5432;Database=postgres;User Id=postgres;Password=root'
+      DbConnect: "Server=postgres;port=5432;Database=postgres;User Id=postgres;Password=root"
     env_file:
       - back.env
     depends_on:

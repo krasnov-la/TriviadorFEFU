@@ -103,5 +103,15 @@ export const useGameStore = defineStore('game-store', {
 
       UpdateLS(this.$state);
     },
+
+    clear(): void {
+      this.inGame = false;
+      this.gamePhase = GamePhases.Init;
+      this.playerTurnLogin = null;
+      this.playersAreas = {};
+      this.playersColors = {};
+      this.gameId = null;
+      UpdateLS(this.$state);
+    },
   },
 });
