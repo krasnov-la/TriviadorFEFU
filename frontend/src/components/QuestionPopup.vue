@@ -12,6 +12,7 @@ const props = defineProps<{
   ans2: string;
   ans3: string;
   ans4: string;
+  dis: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -37,6 +38,7 @@ const emit = defineEmits<{
               color="primary q-my-sm q-mr-sm"
               style="width: 200px"
               @click="emit('answer', 1)"
+              :disable="dis"
             >
               {{ ans1 }}
             </q-btn>
@@ -44,6 +46,7 @@ const emit = defineEmits<{
               color="primary q-my-sm"
               style="width: 200px"
               @click="emit('answer', 3)"
+              :disable="dis"
             >
               {{ ans3 }}
             </q-btn>
@@ -53,6 +56,7 @@ const emit = defineEmits<{
               color="primary q-my-sm q-mr-sm"
               style="width: 200px"
               @click="emit('answer', 2)"
+              :disable="dis"
             >
               {{ ans2 }}
             </q-btn>
@@ -60,6 +64,7 @@ const emit = defineEmits<{
               color="primary q-my-sm"
               style="width: 200px"
               @click="emit('answer', 4)"
+              :disable="dis"
             >
               {{ ans4 }}
             </q-btn>

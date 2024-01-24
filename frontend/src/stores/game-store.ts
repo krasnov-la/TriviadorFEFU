@@ -32,6 +32,7 @@ interface IGameStore {
   areas: { [areaId: string]: IArea };
   gameId: string | null;
   expandChoiseAreaIds: string[];
+  gameScore: { [login: string]: string };
 }
 
 function GetFromLS(): IGameStore {
@@ -43,6 +44,7 @@ function GetFromLS(): IGameStore {
   const areas = LocalStorage.getItem(LSPath.areas);
   const gameId = LocalStorage.getItem(LSPath.gameId);
   const expandChoiseAreaIds = LocalStorage.getItem(LSPath.expandChoiseAreaIds);
+  const gameScore = LocalStorage.getItem(LSPath.gameScore);
 
   if (
     inGame == null ||
@@ -52,7 +54,8 @@ function GetFromLS(): IGameStore {
     playersColors == null ||
     areas == null ||
     gameId == null ||
-    expandChoiseAreaIds == null
+    expandChoiseAreaIds == null ||
+    gameScore == null
   ) {
     const obj: IGameStore = {
       inGame: false,
@@ -63,6 +66,7 @@ function GetFromLS(): IGameStore {
       areas: {},
       gameId: null,
       expandChoiseAreaIds: [],
+      gameScore: {},
     };
 
     for (let i = 0; i < areasCount; i++) {
@@ -87,6 +91,7 @@ function GetFromLS(): IGameStore {
     areas: areas?.valueOf() as { [areaId: string]: IArea },
     gameId: gameId?.valueOf() as string,
     expandChoiseAreaIds: expandChoiseAreaIds?.valueOf() as string[],
+    gameScore: gameScore?.valueOf() as { [login: string]: string },
   };
 }
 
@@ -99,6 +104,7 @@ function UpdateLS(gameStore: IGameStore): void {
   LocalStorage.set(LSPath.areas, gameStore.areas);
   LocalStorage.set(LSPath.gameId, gameStore.gameId);
   LocalStorage.set(LSPath.expandChoiseAreaIds, gameStore.expandChoiseAreaIds);
+  LocalStorage.set(LSPath.gameScore, gameStore.gameScore);
 }
 
 export const useGameStore = defineStore('game-store', {
@@ -172,6 +178,7 @@ export const useGameStore = defineStore('game-store', {
       }
       this.gameId = null;
       this.expandChoiseAreaIds = [];
+      this.gameScore = {};
 
       UpdateLS(this.$state);
     },

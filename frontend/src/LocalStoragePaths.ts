@@ -13,3 +13,4 @@ export const playersColors = 'playersColorsLS';
 export const areas = 'areasLS';
 export const gameId = 'gameIdLS';
 export const expandChoiseAreaIds = 'expandChoiseAreaIdsLS';
+export const gameScore = 'gameScoreLS';

@@ -8,6 +8,7 @@ import QuestionPopup from 'src/components/QuestionPopup.vue';
 
 import { api } from 'src/boot/axios';
 import { QTableProps } from 'quasar';
+import { Router } from 'src/router';
 
 const activeQuestion = ref(false);
 const avatarSrcPlayer1 = ref('https://cdn.quasar.dev/img/avatar2.jpg');
@@ -20,6 +21,8 @@ const ans2 = ref('123');
 const ans3 = ref('123');
 const ans4 = ref('123');
 const correctOfAnswers = reactive<{ [ansNum: number]: boolean }>({});
+const dis = ref(false);
+const actLeaveRoom = ref(false);
 
 const userDataStore = useUserDataStore();
 const gameStore = useGameStore();
@@ -45,28 +48,10 @@ const tColumns: QTableProps = {
 const state = reactive({
   players: [
     {
-      displayName: 'bobik',
-      score: '123',
-      playerMove: false,
-      color: 'red',
-    },
-    {
-      displayName: 'clop',
-      score: '100',
+      displayName: gameStore.playerTurnLogin,
+      score: '0',
       playerMove: true,
-      color: 'blue',
-    },
-    {
-      displayName: 'paskuda',
-      score: '140',
-      playerMove: false,
-      color: 'yellow',
-    },
-    {
-      displayName: 'gena',
-      score: '110',
-      playerMove: false,
-      color: 'green',
+      color: 'red',
     },
   ],
 });
@@ -193,8 +178,19 @@ connection.on('StartTurnInit', (login) => {
   gameStore.playerTurnLogin = login;
   gameStore.gamePhase = GamePhases.Init;
   gameStore.initPlayer(login);
-  gameStore.setPlayerColor(login, PlayerColors.Red + colorCounter++);
+  gameStore.setPlayerColor(login, PlayerColors.Red + colorCounter);
   gameStore.updateLS();
+
+  state.players.push({
+    displayName: login,
+    score: '0',
+    color: colorToHex(PlayerColors.Red + colorCounter++),
+    playerMove: true,
+  });
+
+  for (let a in gameStore.playersColors) {
+    connection.send('GetScore', a);
+  }
 
   if (login == userDataStore.login) {
     myInitTurnStarted();
@@ -205,11 +201,33 @@ connection.on('StartTurnInit', (login) => {
   console.log(`StartTurnInit: ${login}`);
 });
 
+function colorToHex(color: PlayerColors): string {
+  switch (color) {
+    case PlayerColors.Red:
+      return '#f44336';
+    case PlayerColors.Blue:
+      return '#1679ea';
+    case PlayerColors.Green:
+      return '#41e748';
+    case PlayerColors.Yellow:
+      return '#ffeb3b';
+  }
+}
+
 connection.on('StartTurnExpand', async (login) => {
+  dis.value = false;
   gameStore.playerTurnLogin = login;
+  for (let a in state.players) {
+    const isTurn = state.players[a].displayName == login;
+    state.players[a].playerMove = isTurn;
+  }
   gameStore.gamePhase = GamePhases.Expand;
   gameStore.updateLS();
   activeQuestion.value = false;
+
+  for (let a in gameStore.playersColors) {
+    connection.send('GetScore', a);
+  }
 
   if (login == userDataStore.login) {
     myExpandTurnStarted();
@@ -226,12 +244,19 @@ connection.on('StartTurnExpand', async (login) => {
 });
 
 connection.on('EndTurn', () => {
+  for (const i in state.players) {
+    console.log(i);
+    if (Number(state.players[i].score) > 400) {
+      actLeaveRoom.value = true;
+    }
+  }
   console.log('EndTurn');
 });
 
 connection.on('Obtain', (login: string, areaId: number) => {
   gameStore.setPlayerArea(login, (areaId - 1).toString());
   gameStore.updateLS();
+  connection.send('GetScore', userDataStore.login);
   activeQuestion.value = false;
 
   console.log(`Obtain: ${login} - ${areaId}`);
@@ -258,6 +283,15 @@ connection.on('AskQuestion', async (guid) => {
 connection.on('ExpandChoisesDrop', () => {
   gameStore.clearExpandChoises();
   console.log('ExpandChoisesDrop');
+});
+
+connection.on('AddScore', (login, amount) => {
+  for (let a in state.players) {
+    if (state.players[a].displayName == login) {
+      state.players[a].score = amount;
+    }
+  }
+  console.log(`AddScore: ${login} - ${amount}`);
 });
 
 interface IOption {
@@ -294,6 +328,7 @@ function getQuestionData(guid: string) {
 }
 
 function askQuestion(result: boolean) {
+  dis.value = true;
   connection
     .send('AnswerQuestion', Boolean(result))
     .then((val) => {
@@ -334,7 +369,7 @@ function hideAllAreas() {
 
 function selectArea(areaId: string) {
   if (gameStore.playerTurnLogin != userDataStore.login) return;
-  if (!gameStore.areas[areaId].isActive) return;
+  if (!gameStore.areas[Number(areaId) - 1].isActive) return;
   switch (gameStore.gamePhase) {
     case GamePhases.Init:
       connection.send('ChooseInit', Number(areaId));
@@ -435,7 +470,7 @@ function returnFlag(areaId: number) {
     <QuestionPopup
       @answer="
         (ansId) => {
-          askQuestion(correctOfAnswers[ansId]);
+          askQuestion(correctOfAnswers[ansId - 1]);
           console.log(ansId);
         }
       "
@@ -449,7 +484,31 @@ function returnFlag(areaId: number) {
       :ans2="ans2"
       :ans3="ans3"
       :ans4="ans4"
+      :dis="dis"
     />
+    <q-dialog :model-value="actLeaveRoom" persistent>
+      <q-card class="column justify-center" style="width: 700px; height: 400px">
+        <q-card-section
+          class="row text-center justify-center row-5"
+          style="font-size: 20px"
+        >
+          <p style="width: 500px; word-wrap: break-word; white-space: pre-wrap">
+            Game over
+          </p>
+        </q-card-section>
+        <q-card-section class="row text-center justify-center row-5">
+          <div class="column">
+            <q-btn
+              color="primary q-my-sm q-mr-sm"
+              style="width: 200px"
+              @click="Router.push('/lobby')"
+            >
+              Leave Room
+            </q-btn>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 <style lang="sass">

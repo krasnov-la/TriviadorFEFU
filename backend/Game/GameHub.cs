@@ -196,4 +196,13 @@ public sealed class GameHub : Hub<IGameClient>
             player.Score += add;
         await Clients.User(player.Login).AddScore(player.Login, player.Score);
     }
+
+    public async Task GetScore(string login) 
+    {
+        var user = Context.UserIdentifier;
+        var gameId = _players[user];
+        var player = _games[gameId].Players[login];
+
+        await Clients.User(user).AddScore(login, player.Score);
+    }
 }
