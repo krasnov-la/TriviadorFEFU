@@ -490,6 +490,3 @@ $RECYCLE.BIN/
 # Secret keys 
 *.env
 secret.json
-
-# Scripts
-*.sql
